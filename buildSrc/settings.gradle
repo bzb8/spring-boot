@@ -1,5 +1,14 @@
 pluginManagement {
 	repositories {
+		def ALIYUN_REPOSITORY_URL = 'https://maven.aliyun.com/repository/public/'
+		def ALIYUN_JCENTER_URL = 'https://maven.aliyun.com/repository/jcenter/'
+		def ALIYUN_GOOGLE_URL = 'https://maven.aliyun.com/repository/google/'
+		def ALIYUN_GRADLE_PLUGIN_URL = 'https://maven.aliyun.com/repository/gradle-plugin/'
+
+		maven { url ALIYUN_REPOSITORY_URL }
+		maven { url ALIYUN_JCENTER_URL }
+		maven { url ALIYUN_GOOGLE_URL }
+		maven { url ALIYUN_GRADLE_PLUGIN_URL }
 		mavenCentral()
 		gradlePluginPortal()
 	}

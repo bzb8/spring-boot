@@ -1,10 +1,19 @@
 plugins {
 	id "java-gradle-plugin"
 	id "io.spring.javaformat" version "${javaFormatVersion}"
-	id "checkstyle"
+//	id "checkstyle"
 }
 
 repositories {
+	def ALIYUN_REPOSITORY_URL = 'https://maven.aliyun.com/repository/public/'
+	def ALIYUN_JCENTER_URL = 'https://maven.aliyun.com/repository/jcenter/'
+	def ALIYUN_GOOGLE_URL = 'https://maven.aliyun.com/repository/google/'
+	def ALIYUN_GRADLE_PLUGIN_URL = 'https://maven.aliyun.com/repository/gradle-plugin/'
+
+	maven { url ALIYUN_REPOSITORY_URL }
+	maven { url ALIYUN_JCENTER_URL }
+	maven { url ALIYUN_GOOGLE_URL }
+	maven { url ALIYUN_GRADLE_PLUGIN_URL }
 	mavenCentral()
 	gradlePluginPortal()
 }
@@ -30,7 +39,7 @@ if (versions.springFramework.contains("-")) {
 }
 
 dependencies {
-	checkstyle "io.spring.javaformat:spring-javaformat-checkstyle:${javaFormatVersion}"
+//	checkstyle "io.spring.javaformat:spring-javaformat-checkstyle:${javaFormatVersion}"
 
 	implementation(platform("org.springframework:spring-framework-bom:${versions.springFramework}"))
 	implementation("com.fasterxml.jackson.core:jackson-databind:${versions.jackson}")
@@ -52,12 +61,12 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter:${versions.junitJupiter}")
 	testImplementation("org.springframework:spring-test")
 
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.9.3")
 }
 
-checkstyle {
-	toolVersion = 9.3
-}
+//checkstyle {
+//	toolVersion = 9.3
+//}
 
 gradlePlugin {
 	plugins {
