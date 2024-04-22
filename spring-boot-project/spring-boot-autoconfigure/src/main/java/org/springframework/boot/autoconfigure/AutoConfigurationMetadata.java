@@ -29,8 +29,11 @@ public interface AutoConfigurationMetadata {
 	/**
 	 * Return {@code true} if the specified class name was processed by the annotation
 	 * processor.
+	 * 判断指定的类名是否被注解处理器处理过
 	 * @param className the source class
+	 * 待检查的源类名
 	 * @return if the class was processed
+	 * 如果该类被处理过，则返回{@code true}；否则返回{@code false}。
 	 */
 	boolean wasProcessed(String className);
 

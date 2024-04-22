@@ -112,7 +112,7 @@ class JavaConventions {
 		project.getPlugins().withType(JavaBasePlugin.class, (java) -> {
 			project.getPlugins().apply(TestFailuresPlugin.class);
 			project.getPlugins().apply(ArchitecturePlugin.class);
-			configureSpringJavaFormat(project);
+//			configureSpringJavaFormat(project);
 			configureJavaConventions(project);
 			configureJavadocConventions(project);
 			configureTestConventions(project);

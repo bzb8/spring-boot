@@ -39,6 +39,12 @@ import org.springframework.core.annotation.Order;
  * defined. The order in which those beans are subsequently created is unaffected and is
  * determined by each bean's dependencies and any {@link DependsOn @DependsOn}
  * relationships.
+ * 用于自动配置的特定变种，对应于Spring Framework的{@link Order @Order}注解。
+ * 允许自动配置类在它们自己之间进行排序，而不会影响传递给
+ * {@link AnnotationConfigApplicationContext#register(Class...)}的配置类的顺序。
+ * <p>
+ * 和标准的{@link Configuration @Configuration}类一样，自动配置类的应用顺序只影响它们所定义的bean的顺序。
+ * 而这些bean随后是如何创建的则不受影响，它们的创建顺序由每个bean的依赖关系和任何{@link DependsOn @DependsOn}关系决定。
  *
  * @author Andy Wilkinson
  * @since 1.3.0

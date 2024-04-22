@@ -40,9 +40,9 @@ import org.springframework.util.Assert;
  * @author Phillip Webb
  */
 class AutoConfigurationSorter {
-
+	// beanName为org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory的bean的bean
 	private final MetadataReaderFactory metadataReaderFactory;
-
+	// PropertiesAutoConfigurationMetadata
 	private final AutoConfigurationMetadata autoConfigurationMetadata;
 
 	AutoConfigurationSorter(MetadataReaderFactory metadataReaderFactory,
@@ -52,26 +52,42 @@ class AutoConfigurationSorter {
 		this.autoConfigurationMetadata = autoConfigurationMetadata;
 	}
 
+	/**
+	 * 按优先级顺序获取配置类名称的列表。
+	 * 首先按字母顺序排序，然后按配置的顺序排序，最后考虑@AutoConfigureBefore和@AutoConfigureAfter注解的影响。
+	 *
+	 * @param classNames 配置类的名称集合，它们将被按优先级顺序排列。
+	 * 1. META-INF/spring.factories文件中key为EnableAutoConfiguration.class的value值（实现类）
+	 * 2. 按行读取META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+	 * 3. 过滤从@EnableAutoConfiguration注解的exclude和excludeName属性中获取排除的配置类
+	 * 4. 加载META-INF/spring.factories文件中key为AutoConfigurationImportFilter.class的value值（实现类）
+	 * org.springframework.boot.autoconfigure.condition.OnBeanCondition
+	 * org.springframework.boot.autoconfigure.condition.OnClassCondition
+	 * org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition，调用它的filter方法过滤
+	 *
+	 * @return 排序后的配置类名称列表。
+	 */
 	List<String> getInPriorityOrder(Collection<String> classNames) {
+		// 初始化自动配置类信息，包括从@EnableAutoConfiguration注解中解析出的配置类、排除的配置类等
 		AutoConfigurationClasses classes = new AutoConfigurationClasses(this.metadataReaderFactory,
 				this.autoConfigurationMetadata, classNames);
 		List<String> orderedClassNames = new ArrayList<>(classNames);
-		// Initially sort alphabetically
+		// Initially sort alphabetically 首先按字母顺序对配置类名称进行排序
 		Collections.sort(orderedClassNames);
-		// Then sort by order
+		// Then sort by order  然后按照配置类中定义的顺序进行排序,获取当前自动配置类上的@AutoConfigureOrder注解的value属性值排序
 		orderedClassNames.sort((o1, o2) -> {
 			int i1 = classes.get(o1).getOrder();
 			int i2 = classes.get(o2).getOrder();
 			return Integer.compare(i1, i2);
 		});
-		// Then respect @AutoConfigureBefore @AutoConfigureAfter
+		// Then respect @AutoConfigureBefore @AutoConfigureAfter 最后，考虑@AutoConfigureBefore和@AutoConfigureAfter注解的影响来调整排序顺序
 		orderedClassNames = sortByAnnotation(classes, orderedClassNames);
 		return orderedClassNames;
 	}
 
 	private List<String> sortByAnnotation(AutoConfigurationClasses classes, List<String> classNames) {
-		List<String> toSort = new ArrayList<>(classNames);
-		toSort.addAll(classes.getAllNames());
+		List<String> toSort = new ArrayList<>(classNames); // 初始的自动配置类
+		toSort.addAll(classes.getAllNames()); // 包含它们依赖的所有自动配置类, 初始的自动配置类重复了
 		Set<String> sorted = new LinkedHashSet<>();
 		Set<String> processing = new LinkedHashSet<>();
 		while (!toSort.isEmpty()) {
@@ -83,18 +99,18 @@ class AutoConfigurationSorter {
 
 	private void doSortByAfterAnnotation(AutoConfigurationClasses classes, List<String> toSort, Set<String> sorted,
 			Set<String> processing, String current) {
-		if (current == null) {
+		if (current == null) { // 如果当前处理的类名称为空，则从待排序列表中取出第一个类作为当前处理的类
 			current = toSort.remove(0);
 		}
-		processing.add(current);
-		for (String after : classes.getClassesRequestedAfter(current)) {
+		processing.add(current); // 将当前处理的类加入处理中的集合
+		for (String after : classes.getClassesRequestedAfter(current)) {  // 遍历当前类之后依赖的所有类
 			checkForCycles(processing, current, after);
 			if (!sorted.contains(after) && toSort.contains(after)) {
-				doSortByAfterAnnotation(classes, toSort, sorted, processing, after);
+				doSortByAfterAnnotation(classes, toSort, sorted, processing, after); // 递归处理当前类之后依赖的所有类
 			}
 		}
-		processing.remove(current);
-		sorted.add(current);
+		processing.remove(current);  // 从处理中的集合中移除当前类，表示该类处理完成
+		sorted.add(current); // 将当前类加入已排序的集合
 	}
 
 	private void checkForCycles(Set<String> processing, String current, String after) {
@@ -103,7 +119,7 @@ class AutoConfigurationSorter {
 	}
 
 	private static class AutoConfigurationClasses {
-
+		// 待导入的自动配置类的名称 -> AutoConfigurationClass，包含它依赖的@AutoConfigureBefore和@AutoConfigureAfter配置类
 		private final Map<String, AutoConfigurationClass> classes = new HashMap<>();
 
 		AutoConfigurationClasses(MetadataReaderFactory metadataReaderFactory,
@@ -115,6 +131,13 @@ class AutoConfigurationSorter {
 			return this.classes.keySet();
 		}
 
+		/**
+		 *
+		 * @param metadataReaderFactory
+		 * @param autoConfigurationMetadata
+		 * @param classNames 待导入的自动配置类名称列表
+		 * @param required
+		 */
 		private void addToClasses(MetadataReaderFactory metadataReaderFactory,
 				AutoConfigurationMetadata autoConfigurationMetadata, Collection<String> classNames, boolean required) {
 			for (String className : classNames) {
@@ -125,7 +148,7 @@ class AutoConfigurationSorter {
 					if (required || available) {
 						this.classes.put(className, autoConfigurationClass);
 					}
-					if (available) {
+					if (available) { // 递归获取当前自动配置类依赖的@AutoConfigureBefore和@AutoConfigureAfter配置类，并加入到classes中
 						addToClasses(metadataReaderFactory, autoConfigurationMetadata,
 								autoConfigurationClass.getBefore(), false);
 						addToClasses(metadataReaderFactory, autoConfigurationMetadata,
@@ -139,9 +162,9 @@ class AutoConfigurationSorter {
 			return this.classes.get(className);
 		}
 
-		Set<String> getClassesRequestedAfter(String className) {
-			Set<String> classesRequestedAfter = new LinkedHashSet<>(get(className).getAfter());
-			this.classes.forEach((name, autoConfigurationClass) -> {
+		Set<String> getClassesRequestedAfter(String className) { // 取在指定类之后请求的所有类的集合。
+			Set<String> classesRequestedAfter = new LinkedHashSet<>(get(className).getAfter()); // 首先从get方法中获取到在className之后的所有类，并放入LinkedHashSet中，以保持顺序
+			this.classes.forEach((name, autoConfigurationClass) -> { // 遍历所有类，将所有在指定类之前被请求的类添加到classesRequestedAfter集合中
 				if (autoConfigurationClass.getBefore().contains(className)) {
 					classesRequestedAfter.add(name);
 				}
@@ -152,17 +175,17 @@ class AutoConfigurationSorter {
 	}
 
 	private static class AutoConfigurationClass {
-
+		// 待导入的自动配置类名称
 		private final String className;
-
+		// beanName为org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory的bean的bean
 		private final MetadataReaderFactory metadataReaderFactory;
-
+		// PropertiesAutoConfigurationMetadata
 		private final AutoConfigurationMetadata autoConfigurationMetadata;
-
+		// 待导入的自动配置类的注解元数据
 		private volatile AnnotationMetadata annotationMetadata;
-
+		// 获取当前待导入的自动配置类的@AutoConfigureBefore的"value"和"name"的属性值
 		private volatile Set<String> before;
-
+		// 获取当前待导入的自动配置类的@AutoConfigureAfter的"value"和"name"的属性值
 		private volatile Set<String> after;
 
 		AutoConfigurationClass(String className, MetadataReaderFactory metadataReaderFactory,
@@ -206,24 +229,24 @@ class AutoConfigurationSorter {
 						AutoConfigureOrder.DEFAULT_ORDER);
 			}
 			Map<String, Object> attributes = getAnnotationMetadata()
-				.getAnnotationAttributes(AutoConfigureOrder.class.getName());
+				.getAnnotationAttributes(AutoConfigureOrder.class.getName()); // 获取当前自动配置类上的@AutoConfigureOrder注解的value属性值
 			return (attributes != null) ? (Integer) attributes.get("value") : AutoConfigureOrder.DEFAULT_ORDER;
 		}
 
-		private boolean wasProcessed() {
+		private boolean wasProcessed() { // META-INF/spring-autoconfigure-metadata.properties文件是否包含该className的key
 			return (this.autoConfigurationMetadata != null
 					&& this.autoConfigurationMetadata.wasProcessed(this.className));
 		}
 
-		private Set<String> getAnnotationValue(Class<?> annotation) {
+		private Set<String> getAnnotationValue(Class<?> annotation) { // 获取指定注解的value和name属性值
 			Map<String, Object> attributes = getAnnotationMetadata().getAnnotationAttributes(annotation.getName(),
-					true);
+					true); // 获取指定注解的所有属性值
 			if (attributes == null) {
 				return Collections.emptySet();
 			}
 			Set<String> value = new LinkedHashSet<>();
 			Collections.addAll(value, (String[]) attributes.get("value"));
-			Collections.addAll(value, (String[]) attributes.get("name"));
+			Collections.addAll(value, (String[]) attributes.get("name")); // 将注解中名为"value"和"name"的属性值添加到集合中
 			return value;
 		}
 

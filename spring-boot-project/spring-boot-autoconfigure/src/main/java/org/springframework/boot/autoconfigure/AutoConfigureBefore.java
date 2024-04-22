@@ -34,6 +34,10 @@ import org.springframework.context.annotation.DependsOn;
  * defined. The order in which those beans are subsequently created is unaffected and is
  * determined by each bean's dependencies and any {@link DependsOn @DependsOn}
  * relationships.
+ * 提示应该在其他指定的自动配置类之前应用某个{@link EnableAutoConfiguration 自动配置}。
+ * <p>
+ * 和标准的{@link Configuration @Configuration}类一样，自动配置类的应用顺序只会影响其定义的bean的顺序。
+ * 而这些bean随后创建的顺序则不受影响，它们的创建顺序由每个bean的依赖关系以及任何{@link DependsOn @DependsOn}关系决定。
  *
  * @author Phillip Webb
  * @since 1.0.0

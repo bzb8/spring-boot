@@ -45,6 +45,10 @@ public final class ImportCandidates implements Iterable<String> {
 
 	private static final String COMMENT_START = "#";
 
+	/**
+	 * 按行读取{@code META-INF/spring/full-qualified-annotation-name.imports}文件，并返回一个列表。
+	 * 此处为META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+ 	 */
 	private final List<String> candidates;
 
 	private ImportCandidates(List<String> candidates) {
@@ -59,11 +63,14 @@ public final class ImportCandidates implements Iterable<String> {
 
 	/**
 	 * Loads the names of import candidates from the classpath.
-	 *
+	 * <p>从类路径中加载指定注解的候选类名称。
 	 * The names of the import candidates are stored in files named
 	 * {@code META-INF/spring/full-qualified-annotation-name.imports} on the classpath.
 	 * Every line contains the full qualified name of the candidate class. Comments are
 	 * supported using the # character.
+	 * 类路径下存储了注解候选类的名称，文件名格式为{@code META-INF/spring/full-qualified-annotation-name.imports}。
+	 * 每行包含一个候选类的完全限定名，支持使用#字符进行注释。
+	 * <p>按行读取{@code META-INF/spring/full-qualified-annotation-name.imports}文件，并返回一个列表。
 	 * @param annotation annotation to load
 	 * @param classLoader class loader to use for loading
 	 * @return list of names of annotated classes
@@ -71,6 +78,7 @@ public final class ImportCandidates implements Iterable<String> {
 	public static ImportCandidates load(Class<?> annotation, ClassLoader classLoader) {
 		Assert.notNull(annotation, "'annotation' must not be null");
 		ClassLoader classLoaderToUse = decideClassloader(classLoader);
+		// META-INF/spring/%s.imports
 		String location = String.format(LOCATION, annotation.getName());
 		Enumeration<URL> urls = findUrlsInClasspath(classLoaderToUse, location);
 		List<String> importCandidates = new ArrayList<>();
@@ -98,6 +106,7 @@ public final class ImportCandidates implements Iterable<String> {
 	}
 
 	private static List<String> readCandidateConfigurations(URL url) {
+		// 按行读取资源文件
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(new UrlResource(url).getInputStream(), StandardCharsets.UTF_8))) {
 			List<String> candidates = new ArrayList<>();
@@ -117,6 +126,11 @@ public final class ImportCandidates implements Iterable<String> {
 		}
 	}
 
+	/**
+	 * 截取开头到#号的内容
+	 * @param line
+	 * @return
+	 */
 	private static String stripComment(String line) {
 		int commentStart = line.indexOf(COMMENT_START);
 		if (commentStart == -1) {

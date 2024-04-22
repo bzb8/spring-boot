@@ -65,7 +65,7 @@ final class AutoConfigurationMetadataLoader {
 	 * {@link AutoConfigurationMetadata} implementation backed by a properties file.
 	 */
 	private static class PropertiesAutoConfigurationMetadata implements AutoConfigurationMetadata {
-
+		// META-INF/spring-autoconfigure-metadata.properties文件的内容，该文件是自动生成的
 		private final Properties properties;
 
 		PropertiesAutoConfigurationMetadata(Properties properties) {
@@ -94,7 +94,7 @@ final class AutoConfigurationMetadataLoader {
 		}
 
 		@Override
-		public Set<String> getSet(String className, String key, Set<String> defaultValue) {
+		public Set<String> getSet(String className, String key, Set<String> defaultValue) { // 获取配置文件中的属性值，key：className.key
 			String value = get(className, key);
 			return (value != null) ? StringUtils.commaDelimitedListToSet(value) : defaultValue;
 		}

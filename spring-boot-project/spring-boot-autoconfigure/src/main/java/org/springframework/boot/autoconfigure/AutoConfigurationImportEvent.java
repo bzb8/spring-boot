@@ -28,9 +28,9 @@ import java.util.Set;
  * @since 1.5.0
  */
 public class AutoConfigurationImportEvent extends EventObject {
-
+	// 候选配置类
 	private final List<String> candidateConfigurations;
-
+	// 从@EnableAutoConfiguration注解的exclude和excludeName属性中获取排除的配置类
 	private final Set<String> exclusions;
 
 	public AutoConfigurationImportEvent(Object source, List<String> candidateConfigurations, Set<String> exclusions) {
