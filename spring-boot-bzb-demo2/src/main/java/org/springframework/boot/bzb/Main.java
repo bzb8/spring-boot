@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.boot;
+package org.springframework.boot.bzb;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class Main {
 	public static void main(String[] args) {
 		System.out.println("Hello world!");
+		SpringApplication.run(Main.class, args);
 	}
 }

@@ -42,6 +42,7 @@ import org.springframework.util.StringUtils;
 /**
  * Class for storing auto-configuration packages for reference later (e.g. by JPA entity
  * scanner).
+ * <p>用于存储后续（例如，由JPA实体扫描器）引用的自动配置包的类。
  *
  * @author Phillip Webb
  * @author Dave Syer

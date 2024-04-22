@@ -29,6 +29,8 @@ import org.springframework.context.annotation.Import;
  * Registers packages with {@link AutoConfigurationPackages}. When no {@link #basePackages
  * base packages} or {@link #basePackageClasses base package classes} are specified, the
  * package of the annotated class is registered.
+ * <p>注册包到{@link AutoConfigurationPackages}。当没有指定{@link #basePackages 基础包}
+ * 或{@link #basePackageClasses 基础包类}时，将注解类所在的包进行注册。
  *
  * @author Phillip Webb
  * @since 1.3.0
@@ -46,7 +48,11 @@ public @interface AutoConfigurationPackage {
 	 * <p>
 	 * Use {@link #basePackageClasses} for a type-safe alternative to String-based package
 	 * names.
+	 * <p>声明应与{@link AutoConfigurationPackages}注册的基本包。
+	 * <p>
+	 * 如需以类型安全的方式指定包名，可使用{@link #basePackageClasses}。
 	 * @return the back package names
+	 * 返回基础包名的字符串数组
 	 * @since 2.3.0
 	 */
 	String[] basePackages() default {};
@@ -57,7 +63,11 @@ public @interface AutoConfigurationPackage {
 	 * <p>
 	 * Consider creating a special no-op marker class or interface in each package that
 	 * serves no purpose other than being referenced by this attribute.
+	 * 为指定与{@link AutoConfigurationPackages}注册的包提供类型安全的替代方案。
+	 * <p>
+	 * 考虑在每个包中创建一个无操作的标记类或接口，其唯一目的就是被此属性引用。
 	 * @return the base package classes
+	 * 返回基础包类的类数组
 	 * @since 2.3.0
 	 */
 	Class<?>[] basePackageClasses() default {};
