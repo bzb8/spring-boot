@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.bzb.conditionals;
+package org.springframework.boot;
 
-public class ConditionalTest {
+public class Main {
+	public static void main(String[] args) {
+		System.out.println("Hello world!");
+	}
 }

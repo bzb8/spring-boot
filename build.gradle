@@ -20,9 +20,9 @@ nohttp {
 	source.exclude "spring-boot-project/spring-boot-tools/spring-boot-buildpack-platform/src/test/resources/org/springframework/boot/buildpack/platform/docker/export.tar"
 }
 
-check {
+//check {
 //	dependsOn checkstyleNohttp
-}
+//}
 
 allprojects {
 	group "org.springframework.boot"
@@ -53,6 +53,6 @@ allprojects {
 	}
 }
 
-//tasks.named("checkstyleNohttp").configure {
-//	maxHeapSize = "1536m"
-//}
+tasks.named("checkstyleNohttp").configure {
+	maxHeapSize = "2096m"
+}

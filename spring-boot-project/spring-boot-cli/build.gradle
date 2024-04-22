@@ -154,9 +154,9 @@ task zip(type: Zip) {
 	configureArchive it
 }
 
-intTest {
-	dependsOn syncTestRepository, zip
-}
+//intTest {
+//	dependsOn syncTestRepository, zip
+//}
 
 task tar(type: Tar) {
 	compression = "gzip"
