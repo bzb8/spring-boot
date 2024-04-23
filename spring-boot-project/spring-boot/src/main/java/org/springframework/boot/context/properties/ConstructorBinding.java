@@ -26,6 +26,9 @@ import java.lang.annotation.Target;
  * Annotation that can be used to indicate that configuration properties should be bound
  * using constructor arguments rather than by calling setters. Can be added at the type
  * level (if there is an unambiguous constructor) or on the actual constructor to use.
+ * <p>这是一个Java注解@ConstructorBinding，其功能是指示应使用构造函数参数而非setter方法来绑定配置属性。
+ * 该注解既可以应用于类型级别（若存在唯一无歧义的构造函数），也可以直接标注于所选用的构造函数之上。
+ *
  * <p>
  * Note: To use constructor binding the class must be enabled using
  * {@link EnableConfigurationProperties @EnableConfigurationProperties} or configuration
@@ -34,6 +37,10 @@ import java.lang.annotation.Target;
  * {@link org.springframework.stereotype.Component @Component} beans, beans created via
  * {@link org.springframework.context.annotation.Bean @Bean} methods or beans loaded using
  * {@link org.springframework.context.annotation.Import @Import}).
+ * <p>
+ * 使用提示：
+ * 若要采用构造函数绑定，必须通过@EnableConfigurationProperties注解或进行配置属性扫描来启用相关类。
+ * 构造函数绑定不可与通过常规Spring机制构建的bean（如：标记了@Component的bean、通过@Bean方法定义的bean，以及经由@Import引入的bean）共同使用。
  *
  * @author Phillip Webb
  * @since 2.2.0

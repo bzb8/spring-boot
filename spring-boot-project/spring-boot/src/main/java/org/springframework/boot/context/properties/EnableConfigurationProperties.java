@@ -30,6 +30,9 @@ import org.springframework.context.annotation.Import;
  * beans. {@code @ConfigurationProperties} beans can be registered in the standard way
  * (for example using {@link Bean @Bean} methods) or, for convenience, can be specified
  * directly on this annotation.
+ * <p>启用{@link ConfigurationProperties @ConfigurationProperties}注解的bean的支持。
+ * 通过此注解，可以以标准方式注册{@code @ConfigurationProperties} beans（例如使用{@link Bean @Bean}方法），
+ * 或者为了方便起见，可以直接在该注解上指定。
  *
  * @author Dave Syer
  * @since 1.0.0
@@ -42,6 +45,7 @@ public @interface EnableConfigurationProperties {
 
 	/**
 	 * The bean name of the configuration properties validator.
+	 * 配置属性验证器的bean名称。
 	 * @since 2.2.0
 	 */
 	String VALIDATOR_BEAN_NAME = "configurationPropertiesValidator";
@@ -50,7 +54,12 @@ public @interface EnableConfigurationProperties {
 	 * Convenient way to quickly register
 	 * {@link ConfigurationProperties @ConfigurationProperties} annotated beans with
 	 * Spring. Standard Spring Beans will also be scanned regardless of this value.
+	 * 方便地快速注册
+	 * {@link ConfigurationProperties @ConfigurationProperties}注解的beans到Spring。
+	 * 无论此值如何，标准Spring Beans也将被扫描。
+	 *
 	 * @return {@code @ConfigurationProperties} annotated beans to register
+	 * 要注册的{@code @ConfigurationProperties}注解的beans类
 	 */
 	Class<?>[] value() default {};
 
