@@ -59,7 +59,7 @@ public interface DeterminableImports {
 	 * <p>
 	 * Unlike {@link ImportSelector} and {@link ImportBeanDefinitionRegistrar} any
 	 * {@link Aware} callbacks will not be invoked before this method is called.
-	 * 返回代表导入的一组对象。返回的{@code Set}内的对象必须实现有效的{@link Object#hashCode() hashCode}和
+	 * <P>返回代表导入的一组对象。返回的{@code Set}内的对象必须实现有效的{@link Object#hashCode() hashCode}和
 	 * {@link Object#equals(Object) equals}。
 	 * <p>
 	 * 可以将多个{@link DeterminableImports}实例的导入组合由调用者创建一个完整的集合。

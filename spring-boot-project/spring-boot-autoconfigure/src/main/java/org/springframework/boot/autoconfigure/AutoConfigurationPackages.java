@@ -88,6 +88,11 @@ public abstract class AutoConfigurationPackages {
 	 * you don't call this method directly, but instead rely on the default convention
 	 * where the package name is set from your {@code @EnableAutoConfiguration}
 	 * configuration class or classes.
+	 * <p>程序化地注册自动配置包名。后续调用将给定的包名添加到已经注册的包名中。
+	 * 您可以使用此方法手动定义将用于给定{@link BeanDefinitionRegistry}的基包。
+	 * 一般推荐您不要直接调用此方法，而是依赖于默认约定，
+	 * 即包名是从您的{@code @EnableAutoConfiguration}配置类或类中设置的。
+	 *
 	 * @param registry the bean definition registry
 	 * @param packageNames the package names to set
 	 */
@@ -97,6 +102,7 @@ public abstract class AutoConfigurationPackages {
 			beanDefinition.addBasePackages(packageNames);
 		}
 		else {
+			// 创建一个BasePackagesBeanDefinition
 			registry.registerBeanDefinition(BEAN, new BasePackagesBeanDefinition(packageNames));
 		}
 	}
@@ -123,16 +129,26 @@ public abstract class AutoConfigurationPackages {
 	 * Wrapper for a package import.
 	 */
 	private static final class PackageImports {
-
+		/**
+		 * 当前配置类上的@AutoConfigurationPackage注解的basePackages和basePackageClasses属性值
+		 * 为空的话则是当前配置类所在的包名
+		 */
 		private final List<String> packageNames;
 
+		/**
+		 * @param metadata 当前配置类的元数据
+		 */
 		PackageImports(AnnotationMetadata metadata) {
+			// 当前配置类上的@AutoConfigurationPackage注解的属性值
 			AnnotationAttributes attributes = AnnotationAttributes
 				.fromMap(metadata.getAnnotationAttributes(AutoConfigurationPackage.class.getName(), false));
+			// 使用@AutoConfigurationPackage注解的basePackages属性值初始化packageNames
 			List<String> packageNames = new ArrayList<>(Arrays.asList(attributes.getStringArray("basePackages")));
+			// 使用@AutoConfigurationPackage注解的basePackageClasses属性值的getPackage() 添加packageNames
 			for (Class<?> basePackageClass : attributes.getClassArray("basePackageClasses")) {
 				packageNames.add(basePackageClass.getPackage().getName());
 			}
+			// 如果packageNames为空，则使用当前配置类所在的包名
 			if (packageNames.isEmpty()) {
 				packageNames.add(ClassUtils.getPackageName(metadata.getClassName()));
 			}
@@ -206,7 +222,7 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	static final class BasePackagesBeanDefinition extends GenericBeanDefinition {
-
+		// 参考PackageImports的packageNames属性
 		private final Set<String> basePackages = new LinkedHashSet<>();
 
 		BasePackagesBeanDefinition(String... basePackages) {
