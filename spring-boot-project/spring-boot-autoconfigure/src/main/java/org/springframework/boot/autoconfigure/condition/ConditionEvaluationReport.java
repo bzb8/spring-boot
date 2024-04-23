@@ -161,7 +161,7 @@ public final class ConditionEvaluationReport {
 
 	/**
 	 * Attempt to find the {@link ConditionEvaluationReport} for the specified bean
-	 * factory.
+	 * factory. 从容器中获取beanName为autoConfigurationReport的bean
 	 * @param beanFactory the bean factory (may be {@code null})
 	 * @return the {@link ConditionEvaluationReport} or {@code null}
 	 */

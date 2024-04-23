@@ -413,7 +413,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 			long startTime = System.nanoTime();
 			String[] candidates = StringUtils.toStringArray(configurations);
 			boolean skipped = false;
-			for (AutoConfigurationImportFilter filter : this.filters) {
+			for (AutoConfigurationImportFilter filter : this.filters) { // 依次匹配每个过滤器
 				// 使用AutoConfigurationImportFilter过滤不匹配的配置类
 				boolean[] match = filter.match(candidates, this.autoConfigurationMetadata);
 				for (int i = 0; i < match.length; i++) {

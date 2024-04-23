@@ -32,7 +32,7 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * Abstract base class for a {@link SpringBootCondition} that also implements
- * {@link AutoConfigurationImportFilter}.
+ * {@link AutoConfigurationImportFilter}. 这是一个抽象基类，用于实现{@link SpringBootCondition}和{@link AutoConfigurationImportFilter}功能的结合。作为条件注解和自动配置导入过滤的基类，它提供了通用的逻辑处理。
  *
  * @author Phillip Webb
  */
@@ -50,7 +50,7 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 		boolean[] match = new boolean[outcomes.length];
 		for (int i = 0; i < outcomes.length; i++) {
 			match[i] = (outcomes[i] == null || outcomes[i].isMatch());
-			if (!match[i] && outcomes[i] != null) {
+			if (!match[i] && outcomes[i] != null) { // 不匹配的话就记录日志
 				logOutcome(autoConfigurationClasses[i], outcomes[i]);
 				if (report != null) {
 					report.recordConditionEvaluation(autoConfigurationClasses[i], this, outcomes[i]);

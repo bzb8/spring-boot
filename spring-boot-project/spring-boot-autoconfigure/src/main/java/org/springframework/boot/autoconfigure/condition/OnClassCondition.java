@@ -34,7 +34,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link Condition} and {@link AutoConfigurationImportFilter} that checks for the
- * presence or absence of specific classes.
+ * presence or absence of specific classes. 检查特定类的存在或不存在的条件和自动配置导入过滤器。该条件用于在Spring Boot自动配置的加载过程中，根据目标类是否存在于类路径上做出决策。可以用于启用或禁用特定的自动配置，基于那些依赖于特定第三方库或功能的可用性。
  *
  * @author Phillip Webb
  * @see ConditionalOnClass
@@ -48,7 +48,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 			AutoConfigurationMetadata autoConfigurationMetadata) {
 		// Split the work and perform half in a background thread if more than one
 		// processor is available. Using a single additional thread seems to offer the
-		// best performance. More threads make things worse.
+		// best performance. More threads make things worse. 如果有多个处理器可用，则将工作分开并在后台线程中执行一半。使用单个附加线程似乎可以提供最佳性能。更多线程会让事情变得更糟。
 		if (autoConfigurationClasses.length > 1 && Runtime.getRuntime().availableProcessors() > 1) {
 			return resolveOutcomesThreaded(autoConfigurationClasses, autoConfigurationMetadata);
 		}
@@ -168,13 +168,13 @@ class OnClassCondition extends FilteringSpringBootCondition {
 
 	private static final class StandardOutcomesResolver implements OutcomesResolver {
 
-		private final String[] autoConfigurationClasses;
+		private final String[] autoConfigurationClasses; // 待导入的全部的自动配置类
 
-		private final int start;
+		private final int start; // 开始索引
 
-		private final int end;
+		private final int end; // 终止索引
 
-		private final AutoConfigurationMetadata autoConfigurationMetadata;
+		private final AutoConfigurationMetadata autoConfigurationMetadata; // PropertiesAutoConfigurationMetadata
 
 		private final ClassLoader beanClassLoader;
 
@@ -212,7 +212,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 				if (!candidates.contains(",")) {
 					return getOutcome(candidates, this.beanClassLoader);
 				}
-				for (String candidate : StringUtils.commaDelimitedListToStringArray(candidates)) {
+				for (String candidate : StringUtils.commaDelimitedListToStringArray(candidates)) { // 返回逗号分割的第一个
 					ConditionOutcome outcome = getOutcome(candidate, this.beanClassLoader);
 					if (outcome != null) {
 						return outcome;
@@ -226,7 +226,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 		}
 
 		private ConditionOutcome getOutcome(String className, ClassLoader classLoader) {
-			if (ClassNameFilter.MISSING.matches(className, classLoader)) {
+			if (ClassNameFilter.MISSING.matches(className, classLoader)) { // 类路径不存在该className
 				return ConditionOutcome.noMatch(ConditionMessage.forCondition(ConditionalOnClass.class)
 					.didNotFind("required class")
 					.items(Style.QUOTE, className));
