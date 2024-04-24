@@ -54,6 +54,12 @@ import org.springframework.web.filter.ForwardedHeaderFilter;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for servlet web servers.
+ * <p>为servlet web服务器提供的自动配置功能。
+ * 此配置适用于使用Servlet的web应用程序，它会根据classpath上的依赖和属性配置自动启用和配置web服务器。
+ * 例如，如果classpath下存在tomcat的相关依赖，那么该配置将自动配置一个内嵌的Tomcat服务器。
+ *
+ * <p>该注解通常被用在Spring Boot应用程序的配置类上，以启用特定于web服务器的自动配置。
+ * 通过使用这个注解，开发者不需要手动配置web服务器的细节，如端口、上下文路径等，这些配置可以通过属性文件进行控制。
  *
  * @author Phillip Webb
  * @author Dave Syer

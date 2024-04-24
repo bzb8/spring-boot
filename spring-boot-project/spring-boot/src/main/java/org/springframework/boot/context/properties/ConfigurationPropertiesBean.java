@@ -300,20 +300,29 @@ public final class ConfigurationPropertiesBean {
 
 	/**
 	 * The binding method that is used for the bean.
+	 * 定义了与bean绑定方法的枚举。
 	 */
 	public enum BindMethod {
 
 		/**
 		 * Java Bean using getter/setter binding.
+		 * 使用getter/setter方法进行绑定的Java Bean。
 		 */
 		JAVA_BEAN,
 
 		/**
 		 * Value object using constructor binding.
+		 * 使用构造函数进行绑定的值对象。
 		 */
 		VALUE_OBJECT;
 
+		/**
+		 * 根据给定的类型确定绑定方法。
+		 * @param type 待绑定的类型的Class对象。
+		 * @return 绑定方法，如果是通过构造函数绑定则返回VALUE_OBJECT，否则返回JAVA_BEAN。
+		 */
 		static BindMethod forType(Class<?> type) {
+			// 判断类型是否可以通过构造函数绑定，如果是则返回VALUE_OBJECT，否则返回JAVA_BEAN
 			return (ConfigurationPropertiesBindConstructorProvider.INSTANCE.getBindConstructor(type, false) != null)
 					? VALUE_OBJECT : JAVA_BEAN;
 		}

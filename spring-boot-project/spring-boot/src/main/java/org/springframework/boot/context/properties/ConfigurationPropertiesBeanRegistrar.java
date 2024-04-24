@@ -33,6 +33,9 @@ import org.springframework.util.StringUtils;
  * Delegate used by {@link EnableConfigurationPropertiesRegistrar} and
  * {@link ConfigurationPropertiesScanRegistrar} to register a bean definition for a
  * {@link ConfigurationProperties @ConfigurationProperties} class.
+ * <p>用于{@link EnableConfigurationPropertiesRegistrar}和{@link ConfigurationPropertiesScanRegistrar}的委托，
+ * 用于为{@link ConfigurationProperties @ConfigurationProperties}类注册bean定义。
+ * 这个类的作用主要是支持Spring框架中的配置属性绑定功能，允许将配置文件中的属性值绑定到JavaBean上。
  *
  * @author Madhura Bhave
  * @author Phillip Webb
@@ -48,10 +51,18 @@ final class ConfigurationPropertiesBeanRegistrar {
 		this.beanFactory = (BeanFactory) this.registry;
 	}
 
+	/**
+	 * 注册给定类型的属性配置。
+	 * 该方法通过查找类型上{@link ConfigurationProperties}注解，将类型及其注解信息注册。
+	 *
+	 * @param type 需要注册的类型，该类型应被{@link ConfigurationProperties}注解标记。
+	 */
 	void register(Class<?> type) {
+		// 从给定类型及其父类型中查找@ConfigurationProperties注解
 		MergedAnnotation<ConfigurationProperties> annotation = MergedAnnotations
-			.from(type, SearchStrategy.TYPE_HIERARCHY)
-			.get(ConfigurationProperties.class);
+				.from(type, SearchStrategy.TYPE_HIERARCHY)
+				.get(ConfigurationProperties.class);
+		// 使用找到的注解信息注册该类型
 		register(type, annotation);
 	}
 
@@ -62,8 +73,16 @@ final class ConfigurationPropertiesBeanRegistrar {
 		}
 	}
 
+	/**
+	 * 拼接prefix和type.getName()，得到beanName
+	 * @param type 标注@ConfigurationProperties注解的类
+	 * @param annotation @ConfigurationProperties注解
+	 * @return
+	 */
 	private String getName(Class<?> type, MergedAnnotation<ConfigurationProperties> annotation) {
+		// 获取@ConfigurationProperties注解的prefix属性值
 		String prefix = annotation.isPresent() ? annotation.getString("prefix") : "";
+		// 拼接prefix和type.getName()，得到beanName
 		return (StringUtils.hasText(prefix) ? prefix + "-" + type.getName() : type.getName());
 	}
 
@@ -92,6 +111,7 @@ final class ConfigurationPropertiesBeanRegistrar {
 	private BeanDefinition createBeanDefinition(String beanName, Class<?> type) {
 		BindMethod bindMethod = BindMethod.forType(type);
 		RootBeanDefinition definition = new RootBeanDefinition(type);
+		// 设置BindMethod属性
 		definition.setAttribute(BindMethod.class.getName(), bindMethod);
 		if (bindMethod == BindMethod.VALUE_OBJECT) {
 			definition.setInstanceSupplier(() -> createValueObject(beanName, type));

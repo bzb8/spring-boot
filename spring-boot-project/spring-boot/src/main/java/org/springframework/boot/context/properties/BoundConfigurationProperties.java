@@ -80,6 +80,7 @@ public class BoundConfigurationProperties {
 
 	static void register(BeanDefinitionRegistry registry) {
 		Assert.notNull(registry, "Registry must not be null");
+		// 注册BoundConfigurationProperties
 		if (!registry.containsBeanDefinition(BEAN_NAME)) {
 			BeanDefinition definition = BeanDefinitionBuilder
 				.genericBeanDefinition(BoundConfigurationProperties.class, BoundConfigurationProperties::new)

@@ -51,13 +51,23 @@ final class ConfigurationPropertiesJsr303Validator implements Validator {
 		this.delegate.validate(target, errors);
 	}
 
+	/**
+	 * 检查JSR 303验证器是否可用。
+	 *
+	 * @param applicationContext 应用上下文，用于获取类加载器。
+	 * @return boolean 如果所有的验证器类都存在，则返回true；否则返回false。
+	 */
 	static boolean isJsr303Present(ApplicationContext applicationContext) {
+		// 获取应用上下文的类加载器
 		ClassLoader classLoader = applicationContext.getClassLoader();
+		// 遍历所有验证器类
 		for (String validatorClass : VALIDATOR_CLASSES) {
+			// 如果任何一个验证器类不存在，则返回false
 			if (!ClassUtils.isPresent(validatorClass, classLoader)) {
 				return false;
 			}
 		}
+		// 所有验证器类都存在，返回true
 		return true;
 	}
 

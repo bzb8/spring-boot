@@ -46,6 +46,7 @@ public class ConfigurationPropertiesBindingPostProcessor
 
 	/**
 	 * The bean name that this post-processor is registered with.
+	 * 此后处理器注册时使用的 Bean 名称。
 	 */
 	public static final String BEAN_NAME = ConfigurationPropertiesBindingPostProcessor.class.getName();
 
@@ -101,18 +102,23 @@ public class ConfigurationPropertiesBindingPostProcessor
 	/**
 	 * Register a {@link ConfigurationPropertiesBindingPostProcessor} bean if one is not
 	 * already registered.
+	 * <p>注册一个 {@link ConfigurationPropertiesBindingPostProcessor} Bean，如果该 Bean 还未注册的话。
 	 * @param registry the bean definition registry
 	 * @since 2.2.0
 	 */
 	public static void register(BeanDefinitionRegistry registry) {
 		Assert.notNull(registry, "Registry must not be null");
+		// 检查是否已存在ConfigurationPropertiesBindingPostProcessor.class.getName()的Bean定义，若不存在，则进行注册
 		if (!registry.containsBeanDefinition(BEAN_NAME)) {
+			// 注册 ConfigurationPropertiesBindingPostProcessor Bean
 			BeanDefinition definition = BeanDefinitionBuilder
 				.rootBeanDefinition(ConfigurationPropertiesBindingPostProcessor.class)
 				.getBeanDefinition();
+			// 设置Bean定义的角色为基础设施
 			definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 			registry.registerBeanDefinition(BEAN_NAME, definition);
 		}
+		// 注册ConfigurationProperties绑定
 		ConfigurationPropertiesBinder.register(registry);
 	}
 

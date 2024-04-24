@@ -32,7 +32,9 @@ import org.springframework.core.type.AnnotationMetadata;
 /**
  * {@link ImportBeanDefinitionRegistrar} for
  * {@link EnableConfigurationProperties @EnableConfigurationProperties}.
- *
+ * 用于{@link EnableConfigurationProperties @EnableConfigurationProperties}的{@link ImportBeanDefinitionRegistrar}。
+ * <p>这个类实现了ImportBeanDefinitionRegistrar接口，主要功能是在应用启用@EnableConfigurationProperties注解时，
+ * 注册Bean定义，将属性文件中的配置绑定到Bean上。
  * @author Phillip Webb
  * @author Andy Wilkinson
  */
@@ -41,6 +43,12 @@ class EnableConfigurationPropertiesRegistrar implements ImportBeanDefinitionRegi
 	private static final String METHOD_VALIDATION_EXCLUDE_FILTER_BEAN_NAME = Conventions
 		.getQualifiedAttributeName(EnableConfigurationPropertiesRegistrar.class, "methodValidationExcludeFilter");
 
+	/**
+	 *
+	 * @param metadata annotation metadata of the importing class
+	 * <p>当前配置类的注解元数据
+	 * @param registry current bean definition registry
+	 */
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 		registerInfrastructureBeans(registry);
@@ -49,20 +57,42 @@ class EnableConfigurationPropertiesRegistrar implements ImportBeanDefinitionRegi
 		getTypes(metadata).forEach(beanRegistrar::register);
 	}
 
+	/**
+	 * 从给定的元数据中获取配置属性类型集合。
+	 * 这个方法主要用于解析被{@link EnableConfigurationProperties}注解标注的类，
+	 * 并收集这些注解中指定的属性类型。
+	 * <p>获取当前配置类的@EnableConfigurationProperties的value属性值，并过滤掉void类型的属性类型。
+	 *
+	 * @param metadata 元数据对象，用于解析注解信息。
+	 * @return 集合，包含所有非void类型的配置属性类。
+	 */
 	private Set<Class<?>> getTypes(AnnotationMetadata metadata) {
+		// 从元数据中流式读取所有EnableConfigurationProperties注解
 		return metadata.getAnnotations()
-			.stream(EnableConfigurationProperties.class)
-			.flatMap((annotation) -> Arrays.stream(annotation.getClassArray(MergedAnnotation.VALUE)))
-			.filter((type) -> void.class != type)
-			.collect(Collectors.toSet());
+				.stream(EnableConfigurationProperties.class)
+				// 扁平化处理，将注解中class数组转换为流
+				.flatMap((annotation) -> Arrays.stream(annotation.getClassArray(MergedAnnotation.VALUE)))
+				// 过滤掉类型为void的类
+				.filter((type) -> void.class != type)
+				// 收集所有非void类型的类到集合中
+				.collect(Collectors.toSet());
 	}
 
+	/**
+	 * 注册基础组件
+	 * ConfigurationPropertiesBindingPostProcessor
+	 * ConfigurationPropertiesBinder.Factory
+	 * ConfigurationPropertiesBinder
+	 * BoundConfigurationProperties
+	 * @param registry
+	 */
 	static void registerInfrastructureBeans(BeanDefinitionRegistry registry) {
 		ConfigurationPropertiesBindingPostProcessor.register(registry);
 		BoundConfigurationProperties.register(registry);
 	}
 
 	static void registerMethodValidationExcludeFilter(BeanDefinitionRegistry registry) {
+		// 注册MethodValidationExcludeFilter类型的bean，判断给定类的是否使用了@ConfigurationProperties注解，
 		if (!registry.containsBeanDefinition(METHOD_VALIDATION_EXCLUDE_FILTER_BEAN_NAME)) {
 			BeanDefinition definition = BeanDefinitionBuilder
 				.genericBeanDefinition(MethodValidationExcludeFilter.class,

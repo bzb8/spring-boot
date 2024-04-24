@@ -73,9 +73,13 @@ class ConfigurationPropertiesBinder {
 	private final ApplicationContext applicationContext;
 
 	private final PropertySources propertySources;
-
+	// spring容器中beanName = configurationPropertiesValidator的bean
 	private final Validator configurationPropertiesValidator;
 
+	/**
+	 * "javax.validation.Validator", "javax.validation.ValidatorFactory", "javax.validation.bootstrap.GenericBootstrap"
+	 * classpath不存在上面的任何一个，则返回false
+	 */
 	private final boolean jsr303Present;
 
 	private volatile Validator jsr303Validator;
@@ -205,25 +209,34 @@ class ConfigurationPropertiesBinder {
 		return null;
 	}
 
+	/**
+	 * 注册配置属性绑定器的工厂和实例到给定的bean定义注册表中。
+	 * 如果工厂bean或绑定器bean尚未注册，则分别进行注册。
+	 *
+	 * @param registry bean定义注册表，用于注册配置属性绑定器的工厂和实例。
+	 */
 	static void register(BeanDefinitionRegistry registry) {
+		// 检查org.springframework.boot.context.internalConfigurationPropertiesBinderFactory(配置属性绑定器的工厂)是否已注册，若未注册则进行注册
 		if (!registry.containsBeanDefinition(FACTORY_BEAN_NAME)) {
 			BeanDefinition definition = BeanDefinitionBuilder
-				.rootBeanDefinition(ConfigurationPropertiesBinder.Factory.class)
-				.getBeanDefinition();
+					.rootBeanDefinition(ConfigurationPropertiesBinder.Factory.class)
+					.getBeanDefinition();
 			definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 			registry.registerBeanDefinition(ConfigurationPropertiesBinder.FACTORY_BEAN_NAME, definition);
 		}
+		// 检查org.springframework.boot.context.internalConfigurationPropertiesBinder(配置属性绑定器)是否已注册，若未注册则进行注册
 		if (!registry.containsBeanDefinition(BEAN_NAME)) {
 			BeanDefinition definition = BeanDefinitionBuilder
-				.rootBeanDefinition(ConfigurationPropertiesBinder.class,
-						() -> ((BeanFactory) registry)
-							.getBean(FACTORY_BEAN_NAME, ConfigurationPropertiesBinder.Factory.class)
-							.create())
-				.getBeanDefinition();
+					.rootBeanDefinition(ConfigurationPropertiesBinder.class,
+							() -> ((BeanFactory) registry)
+									.getBean(FACTORY_BEAN_NAME, ConfigurationPropertiesBinder.Factory.class)
+									.create())
+					.getBeanDefinition();
 			definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 			registry.registerBeanDefinition(ConfigurationPropertiesBinder.BEAN_NAME, definition);
 		}
 	}
+
 
 	static ConfigurationPropertiesBinder get(BeanFactory beanFactory) {
 		return beanFactory.getBean(BEAN_NAME, ConfigurationPropertiesBinder.class);

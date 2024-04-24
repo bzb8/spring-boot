@@ -25,6 +25,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * {@link EnableAutoConfiguration Auto-configuration} for
  * {@link ConfigurationProperties @ConfigurationProperties} beans. Automatically binds and
  * validates any bean annotated with {@code @ConfigurationProperties}.
+ * <p>该注解用于自动配置{@link ConfigurationProperties @ConfigurationProperties}类型的bean。
+ * 它会自动绑定和验证所有标注了{@code @ConfigurationProperties}的bean。
  *
  * @author Stephane Nicoll
  * @since 1.3.0
