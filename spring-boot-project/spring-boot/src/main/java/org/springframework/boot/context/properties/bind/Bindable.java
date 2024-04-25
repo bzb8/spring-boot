@@ -33,6 +33,8 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * Source that can be bound by a {@link Binder}.
+ * 一个源接口，该接口定义了可以被{@link Binder}绑定的源。
+ * 这是一个非常重要的接口，用于在各种上下文中绑定源数据，例如在UI绑定、数据持久化等方面。
  *
  * @param <T> the source type
  * @author Phillip Webb
@@ -46,13 +48,13 @@ public final class Bindable<T> {
 	private static final Annotation[] NO_ANNOTATIONS = {};
 
 	private static final EnumSet<BindRestriction> NO_BIND_RESTRICTIONS = EnumSet.noneOf(BindRestriction.class);
-
+	// 原始类型
 	private final ResolvableType type;
-
+	// box之后的类型
 	private final ResolvableType boxedType;
-
+	// 提供该值的工厂对象
 	private final Supplier<T> value;
-
+	// 该绑定对象上标注的注解
 	private final Annotation[] annotations;
 
 	private final EnumSet<BindRestriction> bindRestrictions;
@@ -269,29 +271,54 @@ public final class Bindable<T> {
 
 	/**
 	 * Create a new {@link Bindable} of the specified type.
+	 * 根据指定的类型创建一个新的{@link Bindable}实例。
+	 *
+	 * <p>这个方法用于生成一个绑定目标，可以将特定类型的值绑定到某个目标上。
+	 * 通过传入 {@link ResolvableType} 类型参数，可以动态地处理泛型信息。
+	 *
 	 * @param <T> the source type
+	 * 源类型的泛型参数
 	 * @param type the type (must not be {@code null})
+	 * 类型信息，必须不为{@code null}。这个参数定义了绑定的目标类型。
 	 * @return a {@link Bindable} instance
+	 * 一个{@link Bindable}实例，可以用于进一步的绑定操作
 	 * @see #of(Class)
 	 */
 	public static <T> Bindable<T> of(ResolvableType type) {
+		// 确保类型参数不为null
 		Assert.notNull(type, "Type must not be null");
+		// 将类型转换为非原始类型，以支持泛型的正确处理
 		ResolvableType boxedType = box(type);
+		// 创建并返回一个新的Bindable实例
 		return new Bindable<>(type, boxedType, null, NO_ANNOTATIONS, NO_BIND_RESTRICTIONS);
 	}
 
+	/**
+	 * 将给定的ResolvableType封装到相应的包装器类型中。
+	 * 如果类型是基本类型，则将其封装到对应的基本类型包装器中。
+	 * 如果类型是数组，则递归地对数组的组件类型进行封装。
+	 *
+	 * @param type 需要被封装的ResolvableType对象。
+	 * @return 封装后的ResolvableType对象。如果输入已经是包装器类型或非基本类型数组，则返回原对象。
+	 */
 	private static ResolvableType box(ResolvableType type) {
+		// 解析type为具体类型，如果type可以解析且为基本类型，则进行封装
 		Class<?> resolved = type.resolve();
 		if (resolved != null && resolved.isPrimitive()) {
+			// 创建一个包含一个元素的该基本类型的数组，用以获取对应的包装器类型
 			Object array = Array.newInstance(resolved, 1);
+			// 通过数组中元素的类型获取包装器类型
 			Class<?> wrapperType = Array.get(array, 0).getClass();
 			return ResolvableType.forClass(wrapperType);
 		}
+		// 如果type可以解析且为数组类型，则递归封装数组的组件类型
 		if (resolved != null && resolved.isArray()) {
 			return ResolvableType.forArrayComponent(box(type.getComponentType()));
 		}
+		// 如果type无法解析或无需封装，则直接返回原type
 		return type;
 	}
+
 
 	/**
 	 * Restrictions that can be applied when binding values.

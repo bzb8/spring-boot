@@ -51,6 +51,9 @@ import org.springframework.validation.annotation.Validated;
  * all} configuration properties beans in an ApplicationContext, or
  * {@link #get(ApplicationContext, Object, String) individual beans} on a case-by-case
  * basis (for example, in a {@link BeanPostProcessor}).
+ * ConfigurationPropertiesBean类提供了访问使用了{@link ConfigurationProperties @ConfigurationProperties}注解的bean的详情的方法，
+ * 无论这些注解是直接使用的还是用在了{@link Bean @Bean}工厂方法上。这个类可以用于访问一个ApplicationContext中的{@link #getAll(ApplicationContext) 所有配置属性bean}，
+ * 或者是按需访问{@link #get(ApplicationContext, Object, String) 单个bean}（例如，在一个{@link BeanPostProcessor}中使用）。
  *
  * @author Phillip Webb
  * @since 2.2.0
@@ -58,7 +61,7 @@ import org.springframework.validation.annotation.Validated;
  * @see #get(ApplicationContext, Object, String)
  */
 public final class ConfigurationPropertiesBean {
-
+	// beanName
 	private final String name;
 
 	private final Object instance;
@@ -259,41 +262,83 @@ public final class ConfigurationPropertiesBean {
 		return propertiesBean;
 	}
 
+	/**
+	 * 创建一个 ConfigurationPropertiesBean 实例。
+	 * 该方法通过给定的参数构建一个配置属性 Bean，首先查找给定实例或其类型上的 @ConfigurationProperties 和 @Validated 注解，
+	 * 然后根据这些注解和实例信息创建一个 ConfigurationPropertiesBean 实例。
+	 *
+	 * @param name 配置属性的名称。
+	 * @param instance 配置属性的实例，可以为 null。
+	 * @param type 配置属性的类型，当 instance 为 null 时特别有用。标注@ConfigurationProperties注解的类
+	 * @param factory 用于创建配置属性实例的方法，可以为 null。当提供此方法时，将使用方法的返回类型作为绑定类型。
+	 * @return 一个配置好的 ConfigurationPropertiesBean 实例，如果未找到 @ConfigurationProperties 注解则返回 null。
+	 */
 	private static ConfigurationPropertiesBean create(String name, Object instance, Class<?> type, Method factory) {
+		// 查找 @ConfigurationProperties 注解
 		ConfigurationProperties annotation = findAnnotation(instance, type, factory, ConfigurationProperties.class);
 		if (annotation == null) {
 			return null;
 		}
+		// 查找 @Validated 注解
 		Validated validated = findAnnotation(instance, type, factory, Validated.class);
+		// 准备注解数组，用于绑定时的元数据说明
 		Annotation[] annotations = (validated != null) ? new Annotation[] { annotation, validated }
 				: new Annotation[] { annotation };
+		// 根据 factory 方法或类类型确定绑定的类型
 		ResolvableType bindType = (factory != null) ? ResolvableType.forMethodReturnType(factory)
 				: ResolvableType.forClass(type);
+		// 创建一个带有注解和绑定类型的可绑定目标对象
 		Bindable<Object> bindTarget = Bindable.of(bindType).withAnnotations(annotations);
 		if (instance != null) {
+			// 如果存在实例，则在绑定目标中设置现有值
 			bindTarget = bindTarget.withExistingValue(instance);
 		}
+		// 创建并返回 ConfigurationPropertiesBean 实例
 		return new ConfigurationPropertiesBean(name, instance, annotation, bindTarget);
 	}
 
+	/**
+	 * 在给定对象、类型、方法上查找指定注解。
+	 *
+	 * @param instance 需要查找注解的对象实例。
+	 * @param type 对象的类型。
+	 * @param factory 方法对象，用于尝试从该方法上查找注解。
+	 * @param annotationType 需要查找的注解类型。
+	 * @return 找到的注解实例，如果未找到则返回null。
+	 * @param <A> 注解的类型，需继承自Annotation。
+	 */
 	private static <A extends Annotation> A findAnnotation(Object instance, Class<?> type, Method factory,
 			Class<A> annotationType) {
+		// 初始化为未找到的注解
 		MergedAnnotation<A> annotation = MergedAnnotation.missing();
+		// 尝试从方法上查找注解
 		if (factory != null) {
 			annotation = findMergedAnnotation(factory, annotationType);
 		}
+		// 如果在方法上未找到，尝试从类型上查找注解
 		if (!annotation.isPresent()) {
 			annotation = findMergedAnnotation(type, annotationType);
 		}
+		// 如果在类型上仍未找到注解，且实例是AOP代理，则尝试从其目标类上查找注解
 		if (!annotation.isPresent() && AopUtils.isAopProxy(instance)) {
 			annotation = MergedAnnotations.from(AopUtils.getTargetClass(instance), SearchStrategy.TYPE_HIERARCHY)
-				.get(annotationType);
+					.get(annotationType);
 		}
+		// 如果找到了注解，则合成并返回，否则返回null
 		return annotation.isPresent() ? annotation.synthesize() : null;
 	}
 
+	/**
+	 * 查找给定元素上合并的注解。
+	 *
+	 * @param element 要在其上查找注解的注解元素，如类、方法或字段等。
+	 * @param annotationType 要查找的注解类型。
+	 * @param <A> 注解的类型，该类型需扩展自Annotation。
+	 * @return 如果找到指定类型的注解，则返回合并的注解实例；如果未找到，则返回一个表示缺失的注解实例。
+	 */
 	private static <A extends Annotation> MergedAnnotation<A> findMergedAnnotation(AnnotatedElement element,
 			Class<A> annotationType) {
+		// 判断元素是否非空，非空则在元素及其类型层次上搜索指定的注解，为空则返回一个表示注解缺失的实例
 		return (element != null) ? MergedAnnotations.from(element, SearchStrategy.TYPE_HIERARCHY).get(annotationType)
 				: MergedAnnotation.missing();
 	}
@@ -312,7 +357,7 @@ public final class ConfigurationPropertiesBean {
 
 		/**
 		 * Value object using constructor binding.
-		 * 使用构造函数进行绑定的值对象。
+		 * 使用构造函数进行绑定的值对象。构造函数上有@ConstructorBinding注解。
 		 */
 		VALUE_OBJECT;
 

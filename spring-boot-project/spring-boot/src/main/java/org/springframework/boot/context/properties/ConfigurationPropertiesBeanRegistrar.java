@@ -56,6 +56,7 @@ final class ConfigurationPropertiesBeanRegistrar {
 	 * 该方法通过查找类型上{@link ConfigurationProperties}注解，将类型及其注解信息注册。
 	 *
 	 * @param type 需要注册的类型，该类型应被{@link ConfigurationProperties}注解标记。
+	 * -- @EnableConfigurationProperties注解的value属性值
 	 */
 	void register(Class<?> type) {
 		// 从给定类型及其父类型中查找@ConfigurationProperties注解
@@ -66,6 +67,11 @@ final class ConfigurationPropertiesBeanRegistrar {
 		register(type, annotation);
 	}
 
+	/**
+	 * 注册给定类型的属性配置。
+	 * @param type @EnableConfigurationProperties注解的value属性值
+	 * @param annotation {@link ConfigurationProperties}注解
+	 */
 	void register(Class<?> type, MergedAnnotation<ConfigurationProperties> annotation) {
 		String name = getName(type, annotation);
 		if (!containsBeanDefinition(name)) {
@@ -74,7 +80,7 @@ final class ConfigurationPropertiesBeanRegistrar {
 	}
 
 	/**
-	 * 拼接prefix和type.getName()，得到beanName
+	 * 拼接@ConfigurationProperties注解的prefix属性和type.getName()，得到beanName
 	 * @param type 标注@ConfigurationProperties注解的类
 	 * @param annotation @ConfigurationProperties注解
 	 * @return
@@ -101,6 +107,12 @@ final class ConfigurationPropertiesBeanRegistrar {
 		return false;
 	}
 
+	/**
+	 *
+	 * @param beanName @ConfigurationProperties注解的prefix属性值 + type.getName()
+	 * @param type 标注@ConfigurationProperties注解的类
+	 * @param annotation @ConfigurationProperties注解
+	 */
 	private void registerBeanDefinition(String beanName, Class<?> type,
 			MergedAnnotation<ConfigurationProperties> annotation) {
 		Assert.state(annotation.isPresent(), () -> "No " + ConfigurationProperties.class.getSimpleName()
@@ -119,13 +131,27 @@ final class ConfigurationPropertiesBeanRegistrar {
 		return definition;
 	}
 
+	/**
+	 * 创建一个值对象，该对象通过配置属性绑定到给定的bean类型和名称。
+	 *
+	 * @param beanName 要绑定的bean的名称。@ConfigurationProperties注解的prefix属性值 + type.getName()
+	 * @param beanType 要绑定的bean的类型。标注@ConfigurationProperties注解的类
+	 * @return 绑定后的值对象实例。
+	 * @throws ConfigurationPropertiesBindException 如果绑定过程中发生异常。
+	 */
 	private Object createValueObject(String beanName, Class<?> beanType) {
+		// 为给定的bean类型和名称创建一个ConfigurationPropertiesBean实例
 		ConfigurationPropertiesBean bean = ConfigurationPropertiesBean.forValueObject(beanType, beanName);
+
+		// 从bean工厂获取ConfigurationPropertiesBinder实例
 		ConfigurationPropertiesBinder binder = ConfigurationPropertiesBinder.get(this.beanFactory);
+
 		try {
+			// 尝试绑定或创建值对象
 			return binder.bindOrCreate(bean);
 		}
 		catch (Exception ex) {
+			// 如果绑定过程中发生异常，抛出ConfigurationPropertiesBindException
 			throw new ConfigurationPropertiesBindException(bean, ex);
 		}
 	}
