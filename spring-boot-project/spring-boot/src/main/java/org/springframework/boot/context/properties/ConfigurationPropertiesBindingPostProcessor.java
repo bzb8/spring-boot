@@ -33,6 +33,8 @@ import org.springframework.util.Assert;
 /**
  * {@link BeanPostProcessor} to bind {@link PropertySources} to beans annotated with
  * {@link ConfigurationProperties @ConfigurationProperties}.
+ * 该类是一个BeanPostProcessor的实现，用于将PropertySources绑定到使用了@ConfigurationProperties注解的bean上。
+ * 它在Spring应用程序上下文中起到关键作用，负责将属性文件的值加载到对应的bean属性中。
  *
  * @author Dave Syer
  * @author Phillip Webb

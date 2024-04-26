@@ -33,9 +33,18 @@ import org.springframework.util.StringUtils;
  * used purely for formatting, i.e. "{@code foo-bar}" and "{@code foobar}" are considered
  * equivalent.
  * <p>
+ * 构建一个由点分隔的配置属性名称。用户创建的名称可以包含字符"{@code a-z}"、"{@code 0-9}"和"{@code -}"，
+ * 它们必须是小写，并且必须以字母数字字符开头。字符"{@code -}"仅用于格式化，即"{@code foo-bar}"和"{@code foobar}"
+ * 被认为是等价的。
+ *
+ * <p>
  * The "{@code [}" and "{@code ]}" characters may be used to indicate an associative
  * index(i.e. a {@link Map} key or a {@link Collection} index). Indexes names are not
  * restricted and are considered case-sensitive.
+ * <p>
+ * 字符"{@code [}"和"{@code ]}"可以用于指示关联索引（即{@link Map}的键或{@link Collection}的索引）。
+ * 索引名称不受限制，并且被认为是大小写敏感的。
+ *
  * <p>
  * Here are some typical examples:
  * <ul>
@@ -43,6 +52,21 @@ import org.springframework.util.StringUtils;
  * <li>{@code server.hosts[0].name}</li>
  * <li>{@code log[org.springboot].level}</li>
  * </ul>
+ * <p>
+ * 以下是一些典型的例子：
+ * <ul>
+ * <li>{@code spring.main.banner-mode}</li>
+ * <li>{@code server.hosts[0].name}</li>
+ * <li>{@code log[org.springboot].level}</li>
+ * </ul>
+ *
+ * <p>
+ * ConfigurationPropertyName代表的是配置属性的名称，在Binder里的作用可以简单描述为：为Bindable的每个属性构造一个ConfigurationPropertyName，
+ * 然后为.properties里的kv的每个key生成一个ConfigurationPropertyName，如果这俩equals，就把.properties里的值绑定到Bindable的这个属性上。
+ * 所以ConfigurationPropertyName就有三个重要功能：
+ * 1. 将一串字符串构造成ConfigurationPropertyName
+ * 2. 判断不同ConfigurationPropertyName实例是否equal
+ * 3. toString
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -730,6 +754,12 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	/**
 	 * Allows access to the individual elements that make up the name. We store the
 	 * indexes in arrays rather than a list of object in order to conserve memory.
+	 * <p>
+	 * Elements类是一个用于存储名称组成元素的内部类。
+	 * 通过使用数组存储索引来节省内存，而不是使用对象列表。
+	 *
+	 * <p>
+	 * Elements封装了配置属性名称的层级化结构
 	 */
 	private static class Elements {
 
@@ -881,6 +911,8 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 	/**
 	 * Main parsing logic used to convert a {@link CharSequence} to {@link Elements}.
+	 * 主要的解析逻辑，用于将{@link CharSequence}转换为{@link Elements}。
+	 * 这是一个内部类，提供了具体的解析实现。
 	 */
 	private static class ElementsParser {
 
@@ -1044,40 +1076,50 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 	/**
 	 * The various types of element that we can detect.
+	 * <p>
+	 * 定义可检测到的元素类型的枚举。
 	 */
 	private enum ElementType {
 
 		/**
 		 * The element is logically empty (contains no valid chars).
+		 * 元素逻辑上为空（不包含有效字符）。
 		 */
 		EMPTY(false),
 
 		/**
 		 * The element is a uniform name (a-z, 0-9, no dashes, lowercase).
+		 * 只有a-z、0-9，没有’-’，只有小写
 		 */
 		UNIFORM(false),
 
 		/**
 		 * The element is almost uniform, but it contains (but does not start with) at
 		 * least one dash.
+		 * 跟UNIFORM一样，只是包含’-’
 		 */
 		DASHED(false),
 
 		/**
 		 * The element contains non-uniform characters and will need to be converted.
+		 * 可能存在大写，或者有特殊字符
 		 */
 		NON_UNIFORM(false),
 
 		/**
 		 * The element is non-numerically indexed.
+		 * 存在非数字下标
+		 *
 		 */
 		INDEXED(true),
 
 		/**
 		 * The element is numerically indexed.
+		 * 存在数字下标
 		 */
 		NUMERICALLY_INDEXED(true);
 
+		// indexed属性表示是否数组或map下标类型
 		private final boolean indexed;
 
 		ElementType(boolean indexed) {

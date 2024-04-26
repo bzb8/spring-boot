@@ -32,9 +32,14 @@ import org.springframework.stereotype.Component;
  * {@link #basePackageClasses()}, {@link #basePackages()} or its alias {@link #value()}
  * may be specified to define specific packages to scan. If specific packages are not
  * defined scanning will occur from the package of the class with this annotation.
+ * <p>配置用于扫描{@link ConfigurationProperties @ConfigurationProperties}类的基包。
+ * 可以通过指定{@link #basePackageClasses()}, {@link #basePackages()} 或其别名 {@link #value()}
+ * 来定义要扫描的具体包。如果没有指定具体包，扫描将从带有此注解的类所在的包进行。
  * <p>
  * Note: Classes annotated or meta-annotated with {@link Component @Component} will not be
  * picked up by this annotation.
+ * <p>
+ * 注意：被{@link Component @Component}注解或元注解的类不会被此注解捕获。
  *
  * @author Madhura Bhave
  * @since 2.2.0

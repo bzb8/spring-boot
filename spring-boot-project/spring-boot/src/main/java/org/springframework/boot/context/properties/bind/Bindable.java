@@ -35,6 +35,8 @@ import org.springframework.util.ObjectUtils;
  * Source that can be bound by a {@link Binder}.
  * 一个源接口，该接口定义了可以被{@link Binder}绑定的源。
  * 这是一个非常重要的接口，用于在各种上下文中绑定源数据，例如在UI绑定、数据持久化等方面。
+ * <p>Bindable封装的是能被Binder进行属性绑定的source（可以指一个类（需要先创建一个instance）、
+ * 也可以指一个instance、还可以是instance里的一个需要被绑定的属性），里面包含这个类、instance的Supplier、注解、绑定限制
  *
  * @param <T> the source type
  * @author Phillip Webb
@@ -56,7 +58,7 @@ public final class Bindable<T> {
 	private final Supplier<T> value;
 	// 该绑定对象上标注的注解
 	private final Annotation[] annotations;
-
+	// 绑定限制
 	private final EnumSet<BindRestriction> bindRestrictions;
 
 	private Bindable(ResolvableType type, ResolvableType boxedType, Supplier<T> value, Annotation[] annotations,
@@ -322,6 +324,7 @@ public final class Bindable<T> {
 
 	/**
 	 * Restrictions that can be applied when binding values.
+	 *  枚举类型BindRestriction定义了在绑定值时可以应用的限制条件。
 	 *
 	 * @since 2.5.0
 	 */
@@ -329,6 +332,8 @@ public final class Bindable<T> {
 
 		/**
 		 * Do not bind direct {@link ConfigurationProperty} matches.
+		 * NO_DIRECT_PROPERTY限制条件：避免绑定直接匹配的{@link ConfigurationProperty}。
+		 * 不要直接绑定Spring bean，而对其属性进行绑定（直接对bean绑定的话必须要实例化，但bean必须是spring来实例化而不是Binder）
 		 */
 		NO_DIRECT_PROPERTY
 

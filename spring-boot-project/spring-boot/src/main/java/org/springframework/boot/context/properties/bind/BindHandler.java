@@ -21,6 +21,11 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyN
 /**
  * Callback interface that can be used to handle additional logic during element
  * {@link Binder binding}.
+ * <p>这是一个回调接口，用于在元素{@link Binder 绑定}过程中处理额外的逻辑。
+ * 它提供了在绑定过程中执行自定义逻辑的机会。
+ *
+ * <p>BindHandler规定了5个回调方法，在对Bindable进行绑定的各个时期会调用回调方法，并采用责任链设计模式，
+ * 可以自由组合多个handler来实现多种功能，这个接口每个方法都有default实现。
  *
  * @author Phillip Webb
  * @author Madhura Bhave

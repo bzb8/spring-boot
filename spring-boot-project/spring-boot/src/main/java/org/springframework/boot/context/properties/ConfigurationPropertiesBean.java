@@ -55,6 +55,9 @@ import org.springframework.validation.annotation.Validated;
  * 无论这些注解是直接使用的还是用在了{@link Bean @Bean}工厂方法上。这个类可以用于访问一个ApplicationContext中的{@link #getAll(ApplicationContext) 所有配置属性bean}，
  * 或者是按需访问{@link #get(ApplicationContext, Object, String) 单个bean}（例如，在一个{@link BeanPostProcessor}中使用）。
  *
+ * <p>ConfigurationPropertiesBean封装了一个需要绑定的bean，跟bindable的区别是ConfigurationPropertiesBean跟spring里bean是对应的，
+ * 而bindable指的是一个能被绑定的source，可以是类、instance、或者一个field，bindable可以脱离spring使用
+ *
  * @author Phillip Webb
  * @since 2.2.0
  * @see #getAll(ApplicationContext)
@@ -64,12 +67,13 @@ public final class ConfigurationPropertiesBean {
 	// beanName
 	private final String name;
 
+	// bean实例
 	private final Object instance;
 
 	private final ConfigurationProperties annotation;
 
 	private final Bindable<?> bindTarget;
-
+	// bindMethod=VALUE_OBJECT时instance为null
 	private final BindMethod bindMethod;
 
 	private ConfigurationPropertiesBean(String name, Object instance, ConfigurationProperties annotation,

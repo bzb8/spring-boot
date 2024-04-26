@@ -58,6 +58,11 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Internal class used by the {@link ConfigurationPropertiesBindingPostProcessor} to
  * handle the actual {@link ConfigurationProperties @ConfigurationProperties} binding.
+ * <p>内部类，用于由{@link ConfigurationPropertiesBindingPostProcessor}处理实际的
+ * {@link ConfigurationProperties @ConfigurationProperties}绑定。
+ *
+ * <p>该类的主要职责是将属性文件中的配置绑定到指定的Bean上，实现了Spring Framework中配置属性的自动化绑定功能。
+ * 这一功能对于简化应用程序配置的处理极为有用，允许开发者将配置细节从应用程序逻辑中分离出来。
  *
  * @author Stephane Nicoll
  * @author Phillip Webb
