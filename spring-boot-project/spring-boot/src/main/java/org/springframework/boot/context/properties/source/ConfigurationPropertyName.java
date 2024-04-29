@@ -674,8 +674,14 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	/**
 	 * Create a {@link ConfigurationPropertyName} by adapting the given source. See
 	 * {@link #adapt(CharSequence, char, Function)} for details.
+	 * <p>
+	 * 将给定的源名称适配为一个{@link ConfigurationPropertyName}对象。有关详细信息，请参阅
+	 * {@link #adapt(CharSequence, char, Function)}方法。
+	 *
 	 * @param name the name to parse
+	 * 需要解析的名称。
 	 * @param separator the separator used to split the name
+	 * 用于分割名称的分隔符。
 	 * @return a {@link ConfigurationPropertyName}
 	 */
 	public static ConfigurationPropertyName adapt(CharSequence name, char separator) {
@@ -688,11 +694,20 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	 * lenient than {@link #of} in that it allows mixed case names and '{@code _}'
 	 * characters. Other invalid characters are stripped out during parsing.
 	 * <p>
+	 * 根据给定的源创建一个 {@link ConfigurationPropertyName}。该名称将根据给定的 {@code separator} 进行分割。
+	 * 此方法比 {@link #of} 更为宽松，允许混合大小写名称和 '{@code _}' 字符。解析过程中会去除其他无效字符。
+	 *
+	 * <p>
 	 * The {@code elementValueProcessor} function may be used if additional processing is
 	 * required on the extracted element values.
+	 * <p>
+	 * 可以使用 {@code elementValueProcessor} 函数对提取的元素值进行额外处理。
+	 *
 	 * @param name the name to parse
 	 * @param separator the separator used to split the name
+	 * 用于分割名称的字符
 	 * @param elementValueProcessor a function to process element values
+	 * 对元素值进行处理的函数
 	 * @return a {@link ConfigurationPropertyName}
 	 */
 	static ConfigurationPropertyName adapt(CharSequence name, char separator,
@@ -760,6 +775,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	 *
 	 * <p>
 	 * Elements封装了配置属性名称的层级化结构
+	 * 看ElementsParser
 	 */
 	private static class Elements {
 
@@ -768,11 +784,11 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 		private static final ElementType[] NO_TYPE = {};
 
 		public static final Elements EMPTY = new Elements("", 0, NO_POSITION, NO_POSITION, NO_TYPE, null);
-
+		//
 		private final CharSequence source;
-
+		// 有多少个element
 		private final int size;
-
+		// Elements使用数组保存配置属性的每个element的开始index、结束index, 貌似遇见[]最多两层
 		private final int[] start;
 
 		private final int[] end;
@@ -786,6 +802,10 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 		 * that this array is not used as a cache, in fact, when it's not null then
 		 * {@link #canShortcutWithSource} will always return false which may hurt
 		 * performance.
+		 * 此字段用于存储已解析的元素数组，或者如果没有任何解析元素，则可以为null。
+		 * 已解析的元素允许我们以某种方式修改元素的值（例如，当使用映射函数进行适配时，或者在调用append之后）。
+		 * 请注意，这个数组并不用作缓存。事实上，当它不为null时，{@link #canShortcutWithSource} 方法将始终返回false，
+		 * 这可能会影响性能。
 		 */
 		private final CharSequence[] resolved;
 
@@ -917,19 +937,19 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	private static class ElementsParser {
 
 		private static final int DEFAULT_CAPACITY = 6;
-
+		// 原始属性名称字符串
 		private final CharSequence source;
 
 		private final char separator;
-
+		// 有多少个element
 		private int size;
-
+		// start end typee resolved 数组大小一致，下标对应，分隔符分割后的element
 		private int[] start;
 
 		private int[] end;
 
 		private ElementType[] type;
-
+		// valueProcessor 解析后的value，并再次parse()之后的值
 		private CharSequence[] resolved;
 
 		ElementsParser(CharSequence source, char separator) {
@@ -948,14 +968,28 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 			return parse(null);
 		}
 
+		/**
+		 * 解析源字符串，根据指定的规则将字符串分割成多个元素，并通过valueProcessor函数对每个元素进行处理。
+		 *
+		 * @param valueProcessor 一个函数，用于处理每个分割出来的元素。它接受一个CharSequence类型的参数，并返回一个CharSequence类型的结果。
+		 * @return Elements对象，包含了解析后的元素集合。
+		 */
 		Elements parse(Function<CharSequence, CharSequence> valueProcessor) {
+			// 初始化源字符串长度 spring.bo-ot
 			int length = this.source.length();
+			// 开括号计数
 			int openBracketCount = 0;
+			// 起始索引，每个元素的起始索引
 			int start = 0;
+			// 元素类型
 			ElementType type = ElementType.EMPTY;
+
+			// 遍历源字符串
 			for (int i = 0; i < length; i++) {
+				// 当前处理的字符
 				char ch = this.source.charAt(i);
 				if (ch == '[') {
+					// 遇到第一个开括号，更新起始索引和元素类型，开始记录数值索引的元素
 					if (openBracketCount == 0) {
 						add(start, i, type, valueProcessor);
 						start = i + 1;
@@ -964,6 +998,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 					openBracketCount++;
 				}
 				else if (ch == ']') {
+					// 遇到闭括号，减少开括号计数，若开闭括号匹配，则更新起始索引和元素类型为空
 					openBracketCount--;
 					if (openBracketCount == 0) {
 						add(start, i, type, valueProcessor);
@@ -971,18 +1006,24 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 						type = ElementType.EMPTY;
 					}
 				}
-				else if (!type.isIndexed() && ch == this.separator) {
+				else if (!type.isIndexed() && ch == this.separator) { // 非下标索引元素且遇到分隔符，start数组等增加
+					// 非数值索引元素且遇到分隔符，更新起始索引和元素类型为空
 					add(start, i, type, valueProcessor);
-					start = i + 1;
-					type = ElementType.EMPTY;
+					start = i + 1; // 更新起始索引 + 1，表示下一个元素的起始索引
+					type = ElementType.EMPTY; // type = ElementType.EMPTY;
 				}
 				else {
+					// 更新元素类型
 					type = updateType(type, ch, i - start);
 				}
 			}
+
+			// 若存在未匹配的开括号，则将元素类型设置为非统一类型
 			if (openBracketCount != 0) {
 				type = ElementType.NON_UNIFORM;
 			}
+
+			// 添加最后一个元素并返回解析结果
 			add(start, length, type, valueProcessor);
 			return new Elements(this.source, this.size, this.start, this.end, this.type, this.resolved);
 		}
@@ -995,7 +1036,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 				return existingType;
 			}
 			if (existingType == ElementType.EMPTY && isValidChar(ch, index)) {
-				return (index == 0) ? ElementType.UNIFORM : ElementType.NON_UNIFORM;
+				return (index == 0) ? ElementType.UNIFORM : ElementType.NON_UNIFORM; // index == 0 下一个元素的起始位置
 			}
 			if (existingType == ElementType.UNIFORM && ch == '-') {
 				return ElementType.DASHED;
@@ -1009,26 +1050,42 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 			return existingType;
 		}
 
+		/**
+		 * 向数据结构中添加一个元素范围及其类型和处理后的值。
+		 *
+		 * @param start 元素开始的位置。
+		 * @param end 元素结束的位置。
+		 * @param type 元素的类型。
+		 * @param valueProcessor 对元素内容进行处理的函数，可以为null。
+		 * 当不为null时，会使用此函数处理元素的内容，并根据处理结果更新元素的类型和值。
+		 */
 		private void add(int start, int end, ElementType type, Function<CharSequence, CharSequence> valueProcessor) {
+			// 如果范围无效（长度小于1）或类型为EMPTY，则不进行添加
 			if ((end - start) < 1 || type == ElementType.EMPTY) {
 				return;
 			}
+			// 如果数组已满，则扩展数组容量
 			if (this.start.length == this.size) {
 				this.start = expand(this.start);
 				this.end = expand(this.end);
 				this.type = expand(this.type);
 				this.resolved = expand(this.resolved);
 			}
+			// 如果提供了valueProcessor，并且resolved数组未初始化，则初始化resolved数组
 			if (valueProcessor != null) {
 				if (this.resolved == null) {
 					this.resolved = new CharSequence[this.start.length];
 				}
+				// 使用valueProcessor处理元素内容，解析处理后的结果
 				CharSequence resolved = valueProcessor.apply(this.source.subSequence(start, end));
+				// 再次解析
 				Elements resolvedElements = new ElementsParser(resolved, '.').parse();
+				// 确保解析结果只包含单个元素
 				Assert.state(resolvedElements.getSize() == 1, "Resolved element must not contain multiple elements");
 				this.resolved[this.size] = resolvedElements.get(0);
 				type = resolvedElements.getType(0);
 			}
+			// 添加元素的开始位置、结束位置、类型到对应的数组，并更新元素数量
 			this.start[this.size] = start;
 			this.end[this.size] = end;
 			this.type[this.size] = type;

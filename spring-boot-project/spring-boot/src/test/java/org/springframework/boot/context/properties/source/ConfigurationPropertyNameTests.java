@@ -177,6 +177,14 @@ class ConfigurationPropertyNameTests {
 	}
 
 	@Test
+	void ofNameWhenNestedBrackets2() {
+		ConfigurationPropertyName name = ConfigurationPropertyName.of("foo[a[c]]");
+//		assertThat(name.toString()).isEqualTo("foo[a[c][[b]ar]]");
+//		assertThat(name.getElement(0, Form.ORIGINAL)).isEqualTo("foo");
+//		assertThat(name.getElement(1, Form.ORIGINAL)).isEqualTo("a[c][[b]ar]");
+	}
+
+	@Test
 	void ofNameWhenNestedBrackets() {
 		ConfigurationPropertyName name = ConfigurationPropertyName.of("foo[a[c][[b]ar]]");
 		assertThat(name.toString()).isEqualTo("foo[a[c][[b]ar]]");
