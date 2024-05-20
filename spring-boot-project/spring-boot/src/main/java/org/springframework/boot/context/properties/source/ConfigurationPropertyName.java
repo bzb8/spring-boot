@@ -82,9 +82,9 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	 * An empty {@link ConfigurationPropertyName}.
 	 */
 	public static final ConfigurationPropertyName EMPTY = new ConfigurationPropertyName(Elements.EMPTY);
-
+	// 属性名称字符串解析后的elements
 	private Elements elements;
-
+	// 和elements大小一样
 	private final CharSequence[] uniformElements;
 
 	private String string;
@@ -157,30 +157,44 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 	/**
 	 * Return an element in the name in the given form.
-	 * @param elementIndex the element index
+	 * @param elementIndex the element index -- 要获取元素的索引。
 	 * @param form the form to return
+	 * 获取元素的形式，可以是原始形式（ORIGINAL）或带连字符的形式（DASHED）。
 	 * @return the last element
 	 */
 	public String getElement(int elementIndex, Form form) {
+		// 获取指定索引的元素和元素类型
 		CharSequence element = this.elements.get(elementIndex);
 		ElementType type = this.elements.getType(elementIndex);
+
+		// 如果元素是索引类型的，则直接返回元素字符串
 		if (type.isIndexed()) {
 			return element.toString();
 		}
+
+		// 根据指定的形式和元素类型处理并返回元素
 		if (form == Form.ORIGINAL) {
+			// 如果元素类型不是非统一格式，则直接返回元素字符串
 			if (type != ElementType.NON_UNIFORM) {
 				return element.toString();
 			}
+			// 如果元素类型是非统一格式，则将其转换为原始形式后返回
 			return convertToOriginalForm(element).toString();
 		}
+
 		if (form == Form.DASHED) {
+			// 如果元素类型是统一或带连字符的，则直接返回元素字符串
 			if (type == ElementType.UNIFORM || type == ElementType.DASHED) {
 				return element.toString();
 			}
+			// 如果元素类型不是统一或带连字符的，则将其转换为带连字符形式后返回
 			return convertToDashedElement(element).toString();
 		}
+
+		// 处理统一形式的元素
 		CharSequence uniformElement = this.uniformElements[elementIndex];
 		if (uniformElement == null) {
+			// 如果尚未转换为统一形式，根据元素类型进行转换
 			uniformElement = (type != ElementType.UNIFORM) ? convertToUniformElement(element) : element;
 			this.uniformElements[elementIndex] = uniformElement.toString();
 		}
@@ -724,13 +738,13 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	}
 
 	/**
-	 * The various forms that a non-indexed element value can take.
+	 * The various forms that a non-indexed element value can take. 非索引元素值可以采用的各种形式。
 	 */
 	public enum Form {
 
 		/**
 		 * The original form as specified when the name was created or adapted. For
-		 * example:
+		 * example: 定义了原始形式，转换为字符串时保持不变
 		 * <ul>
 		 * <li>"{@code foo-bar}" = "{@code foo-bar}"</li>
 		 * <li>"{@code fooBar}" = "{@code fooBar}"</li>
@@ -742,7 +756,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 		/**
 		 * The dashed configuration form (used for toString; lower-case with only
-		 * alphanumeric characters and dashes).
+		 * alphanumeric characters and dashes).  // 定义了使用连字符分隔的格式，用于转换为字符串，只包含小写字母、数字和连字符
 		 * <ul>
 		 * <li>"{@code foo-bar}" = "{@code foo-bar}"</li>
 		 * <li>"{@code fooBar}" = "{@code foobar}"</li>
@@ -754,7 +768,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 		/**
 		 * The uniform configuration form (used for equals/hashCode; lower-case with only
-		 * alphanumeric characters).
+		 * alphanumeric characters). // 定义了一致的格式，用于相等性和哈希码计算，只包含小写字母和数字
 		 * <ul>
 		 * <li>"{@code foo-bar}" = "{@code foobar}"</li>
 		 * <li>"{@code fooBar}" = "{@code foobar}"</li>
@@ -860,8 +874,8 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 			return this.size;
 		}
 
-		CharSequence get(int index) {
-			if (this.resolved != null && this.resolved[index] != null) {
+		CharSequence get(int index) { // 从source中截取相应索引范围的CharSequence
+			if (this.resolved != null && this.resolved[index] != null) { // 优先使用解析后的结果
 				return this.resolved[index];
 			}
 			int start = this.start[index];
@@ -943,7 +957,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 		private final char separator;
 		// 有多少个element
 		private int size;
-		// start end typee resolved 数组大小一致，下标对应，分隔符分割后的element
+		// start end type resolved 数组大小一致，下标对应，分隔符分割后的element。遇见[或者.号，就添加元素。含头不含尾
 		private int[] start;
 
 		private int[] end;
@@ -991,8 +1005,8 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 				if (ch == '[') {
 					// 遇到第一个开括号，更新起始索引和元素类型，开始记录数值索引的元素
 					if (openBracketCount == 0) {
-						add(start, i, type, valueProcessor);
-						start = i + 1;
+						add(start, i, type, valueProcessor); // 添加上一个元素
+						start = i + 1; // 更新起始索引 + 1，表示下一个元素的起始索引
 						type = ElementType.NUMERICALLY_INDEXED;
 					}
 					openBracketCount++;
@@ -1165,14 +1179,14 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 		/**
 		 * The element is non-numerically indexed.
-		 * 存在非数字下标
+		 * 存在非数字下标，比如[a]
 		 *
 		 */
 		INDEXED(true),
 
 		/**
 		 * The element is numerically indexed.
-		 * 存在数字下标
+		 * 存在数字下标，比如[0]
 		 */
 		NUMERICALLY_INDEXED(true);
 

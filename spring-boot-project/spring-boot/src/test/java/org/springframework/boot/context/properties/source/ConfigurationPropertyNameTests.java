@@ -202,6 +202,7 @@ class ConfigurationPropertyNameTests {
 	@Test
 	void ofNameWithWhitespaceInAssociativeElement() {
 		ConfigurationPropertyName name = ConfigurationPropertyName.of("foo[b a r]");
+		ConfigurationPropertyName name2 = ConfigurationPropertyName.of("foo[b a r]");
 		assertThat(name.toString()).isEqualTo("foo[b a r]");
 		assertThat(name.getElement(0, Form.ORIGINAL)).isEqualTo("foo");
 		assertThat(name.getElement(1, Form.ORIGINAL)).isEqualTo("b a r");
