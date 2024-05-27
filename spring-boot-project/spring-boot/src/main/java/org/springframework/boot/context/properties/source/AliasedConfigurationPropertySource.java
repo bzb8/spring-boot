@@ -37,6 +37,11 @@ class AliasedConfigurationPropertySource implements ConfigurationPropertySource 
 		this.aliases = aliases;
 	}
 
+	/**
+	 * 返回AliasedConfigurationPropertySource实例，getConfigurationProperty方法会首先按ConfigurationPropertyName查找，查不到再按aliasedName查找
+	 * @param name the name of the property (must not be {@code null})
+	 * @return
+	 */
 	@Override
 	public ConfigurationProperty getConfigurationProperty(ConfigurationPropertyName name) {
 		Assert.notNull(name, "Name must not be null");

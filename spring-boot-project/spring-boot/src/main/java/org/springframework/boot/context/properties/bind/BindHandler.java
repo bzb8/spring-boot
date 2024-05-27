@@ -55,8 +55,11 @@ public interface BindHandler {
 	/**
 	 * Called when binding of an element ends with a successful result. Implementations
 	 * may change the ultimately returned result or perform addition validation.
+	 * 当元素绑定结束并成功时调用的方法。实现此方法可以更改最终返回的结果或进行额外的验证。
 	 * @param name the name of the element being bound
+	 * 被绑定元素的名称。
 	 * @param target the item being bound
+	 * 绑定的目标对象。
 	 * @param context the bind context
 	 * @param result the bound result (never {@code null})
 	 * @return the actual result that should be used (may be {@code null})

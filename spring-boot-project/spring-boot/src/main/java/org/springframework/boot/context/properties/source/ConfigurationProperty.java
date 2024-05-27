@@ -28,18 +28,26 @@ import org.springframework.util.ObjectUtils;
  * consisting of a {@link #getName() name}, {@link #getValue() value} and optional
  * {@link #getOrigin() origin}.
  *
+ * 代表从{@link ConfigurationPropertySource}获取的一个配置属性。
+ * 该配置属性包含以下三个主要部分：
+ * <ul>
+ *     <li>名称：通过{@link #getName()}获取。</li>
+ *     <li>值：通过{@link #getValue()}获取。</li>
+ *     <li>来源：通过{@link #getOrigin()}获取，是可选的。</li>
+ * </ul>
+ *
  * @author Phillip Webb
  * @author Madhura Bhave
  * @since 2.0.0
  */
 public final class ConfigurationProperty implements OriginProvider, Comparable<ConfigurationProperty> {
-
+	// 用来查找该属性值的属性名称
 	private final ConfigurationPropertyName name;
-
+	// 属性值
 	private final Object value;
-
+	// 这个kv所在的ConfigurationPropertySource
 	private final ConfigurationPropertySource source;
-
+	// 这个kv的来源标记
 	private final Origin origin;
 
 	public ConfigurationProperty(ConfigurationPropertyName name, Object value, Origin origin) {

@@ -22,6 +22,7 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyN
 /**
  * Internal strategy used by {@link Binder} to bind data objects. A data object is an
  * object composed itself of recursively bound properties.
+ * DataObjectBinder是一个接口，解决java对象绑定的问题。接口定义如下，有两个方法：bind和create
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -33,12 +34,21 @@ interface DataObjectBinder {
 	/**
 	 * Return a bound instance or {@code null} if the {@link DataObjectBinder} does not
 	 * support the specified {@link Bindable}.
+	 * 尝试将指定的 {@link Bindable} 对象绑定到一个实例上。如果 {@link DataObjectBinder} 不支持绑定给定的 {@link Bindable}，
+	 * 则会返回 {@code null}。
+	 *
 	 * @param name the name being bound
+	 * 被绑定的名称。
 	 * @param target the bindable to bind
+	 * 需要绑定的 {@link Bindable} 对象。
 	 * @param context the bind context
+	 * 绑定上下文，提供额外的绑定环境信息。
 	 * @param propertyBinder property binder
+	 * 属性绑定器，用于处理数据对象的属性绑定。
 	 * @param <T> the source type
+	 * 源类型的泛型参数。
 	 * @return a bound instance or {@code null}
+	 * 绑定后的实例，如果不支持绑定则返回 {@code null}。
 	 */
 	<T> T bind(ConfigurationPropertyName name, Bindable<T> target, Context context,
 			DataObjectPropertyBinder propertyBinder);

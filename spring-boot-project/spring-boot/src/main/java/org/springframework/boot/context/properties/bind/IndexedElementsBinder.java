@@ -74,7 +74,7 @@ abstract class IndexedElementsBinder<T> extends AggregateBinder<T> {
 		}
 	}
 
-	private void bindIndexed(ConfigurationPropertySource source, ConfigurationPropertyName root, Bindable<?> target,
+	private void 	bindIndexed(ConfigurationPropertySource source, ConfigurationPropertyName root, Bindable<?> target,
 			AggregateElementBinder elementBinder, IndexedCollectionSupplier collection, ResolvableType aggregateType,
 			ResolvableType elementType) {
 		ConfigurationProperty property = source.getConfigurationProperty(root);

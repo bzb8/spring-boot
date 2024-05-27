@@ -111,6 +111,8 @@ class JavaBeanBinder implements DataObjectBinder {
 
 	/**
 	 * The bean being bound.
+	 * Bean类用于绑定特定类型的bean。
+	 * 该类是一个泛型类，允许绑定不同类型的bean。
 	 *
 	 * @param <T> the bean type
 	 */

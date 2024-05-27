@@ -202,15 +202,26 @@ public final class ConfigurationPropertiesBean {
 	 * {@link ConfigurationProperties @ConfigurationProperties} object. Annotations are
 	 * considered both on the bean itself, as well as any factory method (for example a
 	 * {@link Bean @Bean} method).
+	 * <p>根据给定的bean详情，返回一个{@link ConfigurationPropertiesBean @ConfigurationPropertiesBean}实例。
+	 * 如果bean不是{@link ConfigurationProperties @ConfigurationProperties}对象，则返回{@code null}。
+	 * 注解既会在bean本身考虑，也会在任何工厂方法（例如{@link Bean @Bean}方法）上考虑。
+	 *
 	 * @param applicationContext the source application context
+	 * 源应用上下文
 	 * @param bean the bean to consider
+	 * 要考虑的bean
 	 * @param beanName the bean name
 	 * @return a configuration properties bean or {@code null} if the neither the bean nor
 	 * factory method are annotated with
 	 * {@link ConfigurationProperties @ConfigurationProperties}
+	 * 如果bean或工厂方法有被{@link ConfigurationProperties @ConfigurationProperties}注解标记，
+	 * 则返回一个配置属性bean，否则返回{@code null}
+	 *
 	 */
 	public static ConfigurationPropertiesBean get(ApplicationContext applicationContext, Object bean, String beanName) {
+		// 查找工厂方法
 		Method factoryMethod = findFactoryMethod(applicationContext, beanName);
+		// 基于bean名称、bean实例、bean类以及工厂方法创建配置属性bean实例
 		return create(beanName, bean, bean.getClass(), factoryMethod);
 	}
 
@@ -230,10 +241,12 @@ public final class ConfigurationPropertiesBean {
 			BeanDefinition beanDefinition = beanFactory.getMergedBeanDefinition(beanName);
 			if (beanDefinition instanceof RootBeanDefinition) {
 				Method resolvedFactoryMethod = ((RootBeanDefinition) beanDefinition).getResolvedFactoryMethod();
+				// 如果已解析的工厂方法非空，直接返回该方法
 				if (resolvedFactoryMethod != null) {
 					return resolvedFactoryMethod;
 				}
 			}
+			// 如果在根bean定义中未找到已解析工厂方法，尝试使用反射从bean定义中查找
 			return findFactoryMethodUsingReflection(beanFactory, beanDefinition);
 		}
 		return null;
@@ -243,6 +256,7 @@ public final class ConfigurationPropertiesBean {
 			BeanDefinition beanDefinition) {
 		String factoryMethodName = beanDefinition.getFactoryMethodName();
 		String factoryBeanName = beanDefinition.getFactoryBeanName();
+		// factoryBeanName为空 || factoryMethodName为空，直接返回null
 		if (factoryMethodName == null || factoryBeanName == null) {
 			return null;
 		}
@@ -251,6 +265,7 @@ public final class ConfigurationPropertiesBean {
 			factoryType = factoryType.getSuperclass();
 		}
 		AtomicReference<Method> factoryMethod = new AtomicReference<>();
+		// 查找工厂类中等于factoryMethodName的方法
 		ReflectionUtils.doWithMethods(factoryType, (method) -> {
 			if (method.getName().equals(factoryMethodName)) {
 				factoryMethod.set(method);
@@ -270,9 +285,10 @@ public final class ConfigurationPropertiesBean {
 	 * 创建一个 ConfigurationPropertiesBean 实例。
 	 * 该方法通过给定的参数构建一个配置属性 Bean，首先查找给定实例或其类型上的 @ConfigurationProperties 和 @Validated 注解，
 	 * 然后根据这些注解和实例信息创建一个 ConfigurationPropertiesBean 实例。
+	 * <p>类上需要标注有@ConfigurationProperties注解的类
 	 *
 	 * @param name 配置属性的名称。
-	 * @param instance 配置属性的实例，可以为 null。
+	 * @param instance 配置属性的实例，可以为 null。bean实例
 	 * @param type 配置属性的类型，当 instance 为 null 时特别有用。标注@ConfigurationProperties注解的类
 	 * @param factory 用于创建配置属性实例的方法，可以为 null。当提供此方法时，将使用方法的返回类型作为绑定类型。
 	 * @return 一个配置好的 ConfigurationPropertiesBean 实例，如果未找到 @ConfigurationProperties 注解则返回 null。

@@ -84,7 +84,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 	public static final ConfigurationPropertyName EMPTY = new ConfigurationPropertyName(Elements.EMPTY);
 	// 属性名称字符串解析后的elements
 	private Elements elements;
-	// 和elements大小一样
+	// 和elements大小一样, 只有a-z、0-9，没有’-’，只有小写
 	private final CharSequence[] uniformElements;
 
 	private String string;
@@ -216,7 +216,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 	private CharSequence convertElement(CharSequence element, boolean lowercase, ElementCharPredicate filter) {
 		StringBuilder result = new StringBuilder(element.length());
-		for (int i = 0; i < element.length(); i++) {
+		for (int i = 0; i < element.length(); i++) { // 遍历元素的每个字符
 			char ch = lowercase ? Character.toLowerCase(element.charAt(i)) : element.charAt(i);
 			if (filter.test(ch, i)) {
 				result.append(ch);
@@ -608,6 +608,10 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 	/**
 	 * Return a {@link ConfigurationPropertyName} for the specified string.
+	 * 根据指定的字符串返回一个 {@link ConfigurationPropertyName} 对象。
+	 * <p>此方法用于将传入的字符序列转换为配置属性名称对象。转换过程中会校验名称的有效性，
+	 * 如果名称不符合要求，则会抛出 {@link InvalidConfigurationPropertyNameException} 异常。
+	 *
 	 * @param name the source name
 	 * @return a {@link ConfigurationPropertyName} instance
 	 * @throws InvalidConfigurationPropertyNameException if the name is not valid
@@ -648,21 +652,35 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 		return elementsOf(name, returnNullIfInvalid, ElementsParser.DEFAULT_CAPACITY);
 	}
 
+	/**
+	 * 根据给定的名称序列解析其元素。
+	 *
+	 * @param name 待解析的名称序列，不能为空。
+	 * @param returnNullIfInvalid 如果名称无效且此参数为true，则返回null而不是抛出异常。
+	 * @param parserCapacity 解析器容量，用于控制解析过程中的内存使用。
+	 * @return 解析后的元素集合，如果名称无效且returnNullIfInvalid为true，则返回null。
+	 * @throws InvalidConfigurationPropertyNameException 如果名称以点开头或结尾，或包含不一致的字符，则抛出此异常。
+	 */
 	private static Elements elementsOf(CharSequence name, boolean returnNullIfInvalid, int parserCapacity) {
+		// 检查名称是否为null
 		if (name == null) {
 			Assert.isTrue(returnNullIfInvalid, "Name must not be null");
 			return null;
 		}
+		// 空名称直接返回空元素集合
 		if (name.length() == 0) {
 			return Elements.EMPTY;
 		}
+		// 检查名称首尾字符是否为点
 		if (name.charAt(0) == '.' || name.charAt(name.length() - 1) == '.') {
 			if (returnNullIfInvalid) {
 				return null;
 			}
 			throw new InvalidConfigurationPropertyNameException(name, Collections.singletonList('.'));
 		}
+		// 解析名称序列
 		Elements elements = new ElementsParser(name, '.', parserCapacity).parse();
+		// 验证解析后的每个元素是否一致
 		for (int i = 0; i < elements.getSize(); i++) {
 			if (elements.getType(i) == ElementType.NON_UNIFORM) {
 				if (returnNullIfInvalid) {
@@ -835,8 +853,11 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 
 		Elements append(Elements additional) {
 			int size = this.size + additional.size;
+			// 扩容后的新数组
 			ElementType[] type = new ElementType[size];
+			// 复制当前type到新数组的起始位置
 			System.arraycopy(this.type, 0, type, 0, this.size);
+			// 复制additional的type到新数组的size位置
 			System.arraycopy(additional.type, 0, type, this.size, additional.size);
 			CharSequence[] resolved = newResolved(size);
 			for (int i = 0; i < additional.size; i++) {
@@ -1127,7 +1148,7 @@ public final class ConfigurationPropertyName implements Comparable<Configuration
 			return dest;
 		}
 
-		static boolean isValidChar(char ch, int index) {
+		static boolean isValidChar(char ch, int index) { // a-z, 0-9, -
 			return isAlpha(ch) || isNumeric(ch) || (index != 0 && ch == '-');
 		}
 

@@ -24,6 +24,8 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyS
 
 /**
  * Internal strategy used by {@link Binder} to bind aggregates (Maps, Lists, Arrays).
+ * 内部策略，用于{@link Binder}绑定聚合体（Maps, Lists, Arrays）。
+ * 该方法详细说明了如何处理各种聚合类型的数据绑定。
  *
  * @param <T> the type being bound
  * @author Phillip Webb
@@ -45,19 +47,25 @@ abstract class AggregateBinder<T> {
 	protected abstract boolean isAllowRecursiveBinding(ConfigurationPropertySource source);
 
 	/**
-	 * Perform binding for the aggregate.
+	 * 绑定配置属性到目标对象，并可能将它们合并。
 	 * @param name the configuration property name to bind
+	 * 配置属性的名称，用于绑定。
 	 * @param target the target to bind
+	 * 标对象，将与配置属性进行绑定。
 	 * @param elementBinder an element binder
+	 * 元素绑定器，用于绑定过程。
 	 * @return the bound aggregate or null
 	 */
 	@SuppressWarnings("unchecked")
 	final Object bind(ConfigurationPropertyName name, Bindable<?> target, AggregateElementBinder elementBinder) {
+		// 尝试使用提供的元素绑定器绑定属性到目标对象
 		Object result = bindAggregate(name, target, elementBinder);
 		Supplier<?> value = target.getValue();
+		// 如果结果为null或没有可用的值，则直接返回绑定结果
 		if (result == null || value == null) {
 			return result;
 		}
+		// 否则，尝试将结果与目标值合并并返回合并后的对象
 		return merge((Supplier<T>) value, (T) result);
 	}
 

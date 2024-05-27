@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * A source of {@link ConfigurationProperty ConfigurationProperties}.
+ * ConfigurationPropertySource是一个配置源，背后可以是一个.properties文件、命令行参数甚至是一个map
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -38,6 +39,7 @@ public interface ConfigurationPropertySource {
 	/**
 	 * Return a single {@link ConfigurationProperty} from the source or {@code null} if no
 	 * property can be found.
+	 *从源中返回一个唯一的{@link ConfigurationProperty}对象，如果找不到则返回{@code null}。
 	 * @param name the name of the property (must not be {@code null})
 	 * @return the associated object or {@code null}.
 	 */
@@ -59,6 +61,7 @@ public interface ConfigurationPropertySource {
 	/**
 	 * Return a filtered variant of this source, containing only names that match the
 	 * given {@link Predicate}.
+	 * <p>该方法用于过滤当前配置属性源中的属性名，仅保留与给定的Predicate条件匹配的属性名。
 	 * @param filter the filter to match
 	 * @return a filtered {@link ConfigurationPropertySource} instance
 	 */
@@ -96,6 +99,11 @@ public interface ConfigurationPropertySource {
 	/**
 	 * Return a single new {@link ConfigurationPropertySource} adapted from the given
 	 * Spring {@link PropertySource} or {@code null} if the source cannot be adapted.
+	 * 将给定的Spring {@link PropertySource}适配为单个新的{@link ConfigurationPropertySource}，
+	 * 如果不能适配，则返回null。
+	 * <p>该方法主要用于将Spring框架的属性源转换为配置属性源，以便在不同的上下文中使用。
+	 * 如果给定的属性源已经是配置属性源或者无法被适配，则不会返回任何对象。
+	 *
 	 * @param source the Spring property source to adapt
 	 * @return an adapted source or {@code null} {@link SpringConfigurationPropertySource}
 	 * @since 2.4.0

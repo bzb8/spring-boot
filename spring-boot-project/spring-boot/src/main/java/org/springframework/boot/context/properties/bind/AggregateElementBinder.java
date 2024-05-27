@@ -22,6 +22,8 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyS
 /**
  * Binder that can be used by {@link AggregateBinder} implementations to recursively bind
  * elements.
+ * 一个用于{@link AggregateBinder}实现的绑定器，可以递归地绑定元素。
+ * 该类提供了方法来绑定各种类型的元素，以支持复杂依赖关系的注入和管理。
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -42,10 +44,15 @@ interface AggregateElementBinder {
 	/**
 	 * Bind the given name to a target bindable using optionally limited to a single
 	 * source.
+	 * 将给定的名称绑定到一个目标可绑定对象上，可以选择限制为单个源。
 	 * @param name the name to bind
+	 * 要绑定的名称。
 	 * @param target the target bindable
+	 * 目标可绑定对象。
 	 * @param source the source of the elements or {@code null} to use all sources
+	 * 元素的源，或为 {@code null} 以使用所有源。
 	 * @return a bound object or {@code null}
+	 * 绑定的对象，或 {@code null}。
 	 */
 	Object bind(ConfigurationPropertyName name, Bindable<?> target, ConfigurationPropertySource source);
 

@@ -40,6 +40,7 @@ class PrefixedConfigurationPropertySource implements ConfigurationPropertySource
 		return this.prefix;
 	}
 
+	// getConfigurationProperty方法会在ConfigurationPropertyName前追加prefix
 	@Override
 	public ConfigurationProperty getConfigurationProperty(ConfigurationPropertyName name) {
 		ConfigurationProperty configurationProperty = this.source.getConfigurationProperty(getPrefixedName(name));

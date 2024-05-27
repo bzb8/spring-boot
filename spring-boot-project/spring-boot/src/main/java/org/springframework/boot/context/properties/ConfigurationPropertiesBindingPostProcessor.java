@@ -67,6 +67,7 @@ public class ConfigurationPropertiesBindingPostProcessor
 	public void afterPropertiesSet() throws Exception {
 		// We can't use constructor injection of the application context because
 		// it causes eager factory bean initialization
+		// 此方法不使用构造器注入应用上下文，因为这会导致急切的工厂bean初始化。
 		this.registry = (BeanDefinitionRegistry) this.applicationContext.getAutowireCapableBeanFactory();
 		this.binder = ConfigurationPropertiesBinder.get(this.applicationContext);
 	}
@@ -78,11 +79,13 @@ public class ConfigurationPropertiesBindingPostProcessor
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		// 绑定配置属性的值到标注了@ConfigurationProperties注解的bean
 		bind(ConfigurationPropertiesBean.get(this.applicationContext, bean, beanName));
 		return bean;
 	}
 
 	private void bind(ConfigurationPropertiesBean bean) {
+		// 如果bean为空或者BindMethod属性的值为VALUE_OBJECT，则直接返回
 		if (bean == null || hasBoundValueObject(bean.getName())) {
 			return;
 		}
@@ -96,6 +99,12 @@ public class ConfigurationPropertiesBindingPostProcessor
 		}
 	}
 
+	/**
+	 * 判断该bean定义上BindMethod属性的值为VALUE_OBJECT
+	 *
+	 * @param beanName
+	 * @return
+	 */
 	private boolean hasBoundValueObject(String beanName) {
 		return this.registry.containsBeanDefinition(beanName) && BindMethod.VALUE_OBJECT
 			.equals(this.registry.getBeanDefinition(beanName).getAttribute(BindMethod.class.getName()));

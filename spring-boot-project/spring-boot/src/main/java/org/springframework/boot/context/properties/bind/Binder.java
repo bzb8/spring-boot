@@ -47,6 +47,8 @@ import org.springframework.util.Assert;
  * A container object which Binds objects from one or more
  * {@link ConfigurationPropertySource ConfigurationPropertySources}.
  *
+ * <p>参考：https://blog.csdn.net/qq_32868023/article/details/123616110
+ *
  * @author Phillip Webb
  * @author Madhura Bhave
  * @since 2.0.0
@@ -55,15 +57,15 @@ public class Binder {
 
 	private static final Set<Class<?>> NON_BEAN_CLASSES = Collections
 		.unmodifiableSet(new HashSet<>(Arrays.asList(Object.class, Class.class)));
-
+	// 可以迭代出ConfigurationPropertySource
 	private final Iterable<ConfigurationPropertySource> sources;
-
+	// 用于解析配置值里面的placeholder
 	private final PlaceholdersResolver placeholdersResolver;
-
+	// 用于转换配置的值
 	private final BindConverter bindConverter;
-
+	// 默认的BindHandler，如果没传就用默认的
 	private final BindHandler defaultBindHandler;
-
+	// 用于绑定DataObject
 	private final List<DataObjectBinder> dataObjectBinders;
 
 	/**
@@ -329,6 +331,12 @@ public class Binder {
 		Assert.notNull(target, "Target must not be null");
 		handler = (handler != null) ? handler : this.defaultBindHandler;
 		Context context = new Context();
+		// 。这个bind的重载方法是属性绑定的核心逻辑，它负责对一个Bindable进行绑定，
+		// 这个Bindable可以是外部调用传进来的Bindable，也可以是绑定过程在为了绑定数组、集合、Map、java属性而生成的Bindable，
+		// 涉及递归调用，主要处理了几件事情
+		//   在Bindable绑定的各个阶段，调用Bindable回调函数
+		//   将Bindable分为属性绑定、Aggregate绑定、DataObject绑定等情况，分别调用对应的Binder
+		//   绑定方式按JAVA_BEAN和VALUE_OBJECT，分别调用对应的Binder
 		return bind(name, target, handler, context, false, create);
 	}
 
@@ -354,12 +362,14 @@ public class Binder {
 			result = handler.onSuccess(name, target, context, result);
 			result = context.getConverter().convert(result, target);
 		}
+		// 如果需要创建对象（bindOrCreate方法传进来的create为true）则创建对象并调用onCreate回调
 		if (result == null && create) {
 			result = create(target, context);
 			result = handler.onCreate(name, target, context, result);
 			result = context.getConverter().convert(result, target);
 			Assert.state(result != null, () -> "Unable to create instance for " + target.getType());
 		}
+		// 最后调用onFinish回调
 		handler.onFinish(name, target, context, result);
 		return context.getConverter().convert(result, target);
 	}
@@ -394,10 +404,13 @@ public class Binder {
 		if (property == null && context.depth != 0 && containsNoDescendantOf(context.getSources(), name)) {
 			return null;
 		}
+		// 如果这个Bindable是数组、集合、Map（aggregateBinder != null），那么调用bindAggregate
 		AggregateBinder<?> aggregateBinder = getAggregateBinder(target, context);
 		if (aggregateBinder != null) {
 			return bindAggregate(name, target, handler, context, aggregateBinder);
 		}
+
+		// 如果配置source中找到了kv，那么开始绑定这个属性，调用bindProperty
 		if (property != null) {
 			try {
 				return bindProperty(target, context, property);
@@ -411,6 +424,7 @@ public class Binder {
 				throw ex;
 			}
 		}
+		// 否则当作DataObject进行绑定，调用bindDataObject
 		return bindDataObject(name, target, handler, context, allowRecursiveBinding);
 	}
 
@@ -440,6 +454,7 @@ public class Binder {
 
 	private <T> ConfigurationProperty findProperty(ConfigurationPropertyName name, Bindable<T> target,
 			Context context) {
+		// 如果名称为空或目标类型有禁止直接绑定的限制，则直接返回null
 		if (name.isEmpty() || target.hasBindRestriction(BindRestriction.NO_DIRECT_PROPERTY)) {
 			return null;
 		}
@@ -453,6 +468,7 @@ public class Binder {
 	}
 
 	private <T> Object bindProperty(Bindable<T> target, Context context, ConfigurationProperty property) {
+		// bindProperty逻辑是最简单的，用placeholdersResolver解析一下placeholder，然后通过Converter转换，就是绑定的结果
 		context.setConfigurationProperty(property);
 		Object result = property.getValue();
 		result = this.placeholdersResolver.resolvePlaceholders(result);
@@ -535,17 +551,18 @@ public class Binder {
 	 * Context used when binding and the {@link BindContext} implementation.
 	 */
 	final class Context implements BindContext {
-
+		// 绑定深度，每递归绑定一次深度+1，递归出来深度-1
+		// 深度为0表示正在绑定的是最外层的对象，BindHandler会以此来判断。withIncreasedDepth方法很简单，调用bindAggrate和bindDataObject都会增加深度
 		private int depth;
-
+		// 保存当前正在绑定的source
 		private final List<ConfigurationPropertySource> source = Arrays.asList((ConfigurationPropertySource) null);
 
 		private int sourcePushCount;
-
+		// 正在绑定的DataObject的类型
 		private final Deque<Class<?>> dataObjectBindings = new ArrayDeque<>();
-
+		// 在绑定的VALUE_OBJECT的类型
 		private final Deque<Class<?>> constructorBindings = new ArrayDeque<>();
-
+		// 正在绑定的kv
 		private ConfigurationProperty configurationProperty;
 
 		private void increaseDepth() {

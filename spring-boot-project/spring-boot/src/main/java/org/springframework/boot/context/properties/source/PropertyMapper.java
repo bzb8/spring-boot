@@ -34,6 +34,8 @@ import org.springframework.core.env.PropertySource;
  * mapping them to a {@link ConfigurationPropertyName} and checking for applicability. See
  * {@link SpringConfigurationPropertySource} for more details.
  *
+ * <p>ConfigurationPropertyName到String相互映射
+ *
  * @author Phillip Webb
  * @author Madhura Bhave
  * @see SpringConfigurationPropertySource
