@@ -34,7 +34,7 @@ import org.springframework.util.Assert;
 public class DefaultApplicationArguments implements ApplicationArguments {
 
 	private final Source source;
-
+	// 运行{@link SpringApplication}的main方法参数
 	private final String[] args;
 
 	public DefaultApplicationArguments(String... args) {

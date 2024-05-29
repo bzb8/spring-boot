@@ -41,7 +41,9 @@ public interface SpringApplicationRunListener {
 	/**
 	 * Called immediately when the run method has first started. Can be used for very
 	 * early initialization.
+	 * <p>此方法在 run 方法启动时立即调用，可用于非常早期的初始化过程。
 	 * @param bootstrapContext the bootstrap context
+	 * 启动上下文，提供配置和初始化所需的环境。
 	 */
 	default void starting(ConfigurableBootstrapContext bootstrapContext) {
 	}

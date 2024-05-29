@@ -21,6 +21,7 @@ import java.util.Set;
 
 /**
  * Provides access to the arguments that were used to run a {@link SpringApplication}.
+ * <p>提供访问用于运行{@link SpringApplication}的参数的方法。
  *
  * @author Phillip Webb
  * @since 1.3.0

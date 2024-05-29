@@ -86,26 +86,43 @@ class SpringApplicationBannerPrinter {
 		return DEFAULT_BANNER;
 	}
 
+	/**
+	 * 根据给定的环境信息尝试加载并返回一个文本横幅。
+	 * <p>
+	 * 此方法首先从环境配置中获取横幅的位置，然后尝试加载该资源。
+	 * 如果资源存在且不是liquibase-core的一部分，将返回一个ResourceBanner实例。
+	 * 如果无法加载或资源不存在，将返回null。
+	 *
+	 * @param environment 提供配置信息的环境对象，用于获取横幅位置。
+	 * @return 如果成功加载横幅资源，则返回一个Banner实例；否则返回null。
+	 */
 	private Banner getTextBanner(Environment environment) {
+		// 从环境配置中获取横幅位置，如果未配置，则使用默认位置
 		String location = environment.getProperty(BANNER_LOCATION_PROPERTY, DEFAULT_BANNER_LOCATION);
+		// 根据位置加载资源
 		Resource resource = this.resourceLoader.getResource(location);
 		try {
+			// 检查资源是否存在，且URL中不包含"liquibase-core"，以决定是否加载横幅
 			if (resource.exists() && !resource.getURL().toExternalForm().contains("liquibase-core")) {
 				return new ResourceBanner(resource);
 			}
 		}
 		catch (IOException ex) {
-			// Ignore
+			// 忽略加载过程中可能发生的IO异常
 		}
+		// 如果资源无法加载或不存在，返回null
 		return null;
 	}
 
 	private Banner getImageBanner(Environment environment) {
+		// 获取spring.banner.image.location属性的值
 		String location = environment.getProperty(BANNER_IMAGE_LOCATION_PROPERTY);
 		if (StringUtils.hasLength(location)) {
+			// 使用资源加载器加载spring.banner.image.location的资源
 			Resource resource = this.resourceLoader.getResource(location);
 			return resource.exists() ? new ImageBanner(resource) : null;
 		}
+		// spring.banner.image.location不存在，则加载banner.*的资源
 		for (String ext : IMAGE_EXTENSION) {
 			Resource resource = this.resourceLoader.getResource("banner." + ext);
 			if (resource.exists()) {
@@ -154,7 +171,7 @@ class SpringApplicationBannerPrinter {
 	 * specify the source class.
 	 */
 	private static class PrintedBanner implements Banner {
-
+		// SpringBootBanner
 		private final Banner banner;
 
 		private final Class<?> sourceClass;

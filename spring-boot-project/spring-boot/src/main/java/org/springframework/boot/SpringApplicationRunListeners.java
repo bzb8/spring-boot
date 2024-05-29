@@ -38,11 +38,12 @@ import org.springframework.util.ReflectionUtils;
  * @author Chris Bono
  */
 class SpringApplicationRunListeners {
-
+	// LogFactory.getLog(SpringApplication.class);
 	private final Log log;
-
+	// spring-boot jar包中的META-INF/spring.factories中的监听器
+	// org.springframework.boot.context.event.EventPublishingRunListener
 	private final List<SpringApplicationRunListener> listeners;
-
+	// DefaultApplicationStartup
 	private final ApplicationStartup applicationStartup;
 
 	SpringApplicationRunListeners(Log log, Collection<? extends SpringApplicationRunListener> listeners,
@@ -52,7 +53,15 @@ class SpringApplicationRunListeners {
 		this.applicationStartup = applicationStartup;
 	}
 
+	/**
+	 *
+	 * @param bootstrapContext DefaultBootstrapContext
+	 * @param mainApplicationClass
+	 */
 	void starting(ConfigurableBootstrapContext bootstrapContext, Class<?> mainApplicationClass) {
+		// 1. 创建名为"spring.boot.application.starting"的DefaultStartupStep
+		// 2. 依赖调用listeners的starting方法
+		// 3. 对step的打tag
 		doWithListeners("spring.boot.application.starting", (listener) -> listener.starting(bootstrapContext),
 				(step) -> {
 					if (mainApplicationClass != null) {
@@ -114,13 +123,25 @@ class SpringApplicationRunListeners {
 		doWithListeners(stepName, listenerAction, null);
 	}
 
+	/**
+	 * 对Spring应用程序启动过程中的监听器和步骤进行操作的私有方法。
+	 *
+	 * @param stepName 步骤的名称，用于标识启动过程中的具体步骤。
+	 * @param listenerAction 一个消费者接口，接受SpringApplicationRunListener类型的参数，用于执行监听器的操作。
+	 * @param stepAction 一个消费者接口，接受StartupStep类型的参数，用于执行启动步骤的操作。如果此参数为null，则不执行任何操作。
+	 */
 	private void doWithListeners(String stepName, Consumer<SpringApplicationRunListener> listenerAction,
 			Consumer<StartupStep> stepAction) {
+
+		// 启动一个名为stepName的启动步骤
 		StartupStep step = this.applicationStartup.start(stepName);
+		// 遍历并执行所有的监听器操作
 		this.listeners.forEach(listenerAction);
+		// 如果提供了stepAction，则执行此步骤操作
 		if (stepAction != null) {
 			stepAction.accept(step);
 		}
+		// 结束当前步骤
 		step.end();
 	}
 

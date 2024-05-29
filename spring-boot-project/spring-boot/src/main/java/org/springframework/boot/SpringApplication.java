@@ -195,7 +195,7 @@ public class SpringApplication {
 	private boolean addConversionService = true;
 
 	private Banner banner;
-
+	// 如null
 	private ResourceLoader resourceLoader;
 
 	private BeanNameGenerator beanNameGenerator;
@@ -292,26 +292,59 @@ public class SpringApplication {
 	 */
 	public ConfigurableApplicationContext run(String... args) {
 		long startTime = System.nanoTime();
+		// new DefaultBootstrapContext()
 		DefaultBootstrapContext bootstrapContext = createBootstrapContext();
 		ConfigurableApplicationContext context = null;
 		configureHeadlessProperty();
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		// 发射ApplicationStartingEvent事件
 		listeners.starting(bootstrapContext, this.mainApplicationClass);
 		try {
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, bootstrapContext, applicationArguments);
 			configureIgnoreBeanInfo(environment);
+			// 打印spring boot横幅
 			Banner printedBanner = printBanner(environment);
+			// 【4】根据不同类型创建不同类型的spring applicationcontext容器
+			// 因为这里是servlet环境，所以创建的是AnnotationConfigServletWebServerApplicationContext容器对象
 			context = createApplicationContext();
 			context.setApplicationStartup(this.applicationStartup);
+			// 准备上下文
+			// 【6】为刚创建的AnnotationConfigServletWebServerApplicationContext容器对象做一些初始化工作，准备一些容器属性值等
+			// 1）为AnnotationConfigServletWebServerApplicationContext的属性AnnotatedBeanDefinitionReader和ClassPathBeanDefinitionScanner设置environgment属性
+			// 2）根据情况对ApplicationContext应用一些相关的后置处理，比如设置resourceLoader属性等
+			// 3）在容器刷新前调用各个ApplicationContextInitializer的初始化方法，ApplicationContextInitializer是在构建SpringApplication对象时从spring.factories中加载的
+			// 4）》》》》》发射【ApplicationContextInitializedEvent】事件，标志context容器被创建且已准备好
+			// 5）从context容器中获取beanFactory，并向beanFactory中注册一些单例bean，比如applicationArguments，printedBanner
+			// 6）TODO 加载bean到application context，注意这里只是加载了部分bean比如mainApplication这个bean，大部分bean应该是在AbstractApplicationContext.refresh方法中被加载？这里留个疑问先
+			// 7）》》》》》发射【ApplicationPreparedEvent】事件，标志Context容器已经准备完成
 			prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner);
+			// 【7】刷新容器，这一步至关重要，以后会在分析Spring源码时详细分析，主要做了以下工作：
+			// 1）在context刷新前做一些准备工作，比如初始化一些属性设置，属性合法性校验和保存容器中的一些早期事件等；
+			// 2）让子类刷新其内部bean factory,注意SpringBoot和Spring启动的情况执行逻辑不一样
+			// 3）对bean factory进行配置，比如配置bean factory的类加载器，后置处理器等
+			// 4）完成bean factory的准备工作后，此时执行一些后置处理逻辑，子类通过重写这个方法来在BeanFactory创建并预准备完成以后做进一步的设置
+			// 在这一步，所有的bean definitions将会被加载，但此时bean还不会被实例化
+			// 5）执行BeanFactoryPostProcessor的方法即调用bean factory的后置处理器：
+			// BeanDefinitionRegistryPostProcessor（触发时机：bean定义注册之前）和BeanFactoryPostProcessor（触发时机：bean定义注册之后bean实例化之前）
+			// 6）注册bean的后置处理器BeanPostProcessor，注意不同接口类型的BeanPostProcessor；在Bean创建前后的执行时机是不一样的
+			// 7）初始化国际化MessageSource相关的组件，比如消息绑定，消息解析等
+			// 8）初始化事件广播器，如果bean factory没有包含事件广播器，那么new一个SimpleApplicationEventMulticaster广播器对象并注册到bean factory中
+			// 9）AbstractApplicationContext定义了一个模板方法onRefresh，留给子类覆写，比如ServletWebServerApplicationContext覆写了该方法来创建内嵌的tomcat容器
+			// 10）注册实现了ApplicationListener接口的监听器，之前已经有了事件广播器，此时就可以派发一些early application events
+			// 11）完成容器bean factory的初始化，并初始化所有剩余的单例bean。这一步非常重要，一些bean postprocessor会在这里调用。
+			// 12）完成容器的刷新工作，并且调用生命周期处理器的onRefresh()方法，并且发布ContextRefreshedEvent事件
 			refreshContext(context);
+			// 【8】执行刷新容器后的后置处理逻辑，注意这里为空方法
 			afterRefresh(context, applicationArguments);
 			Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
+			// 打印日志
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), timeTakenToStartup);
 			}
+			// 》》》》》发射【ApplicationStartedEvent】事件，标志spring容器已经刷新，此时所有的bean实例都已经加载完毕
 			listeners.started(context, timeTakenToStartup);
+			// 【9】调用ApplicationRunner和CommandLineRunner的run方法，实现spring容器启动后需要做的一些东西比如加载一些业务数据等
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
@@ -331,6 +364,7 @@ public class SpringApplication {
 
 	private DefaultBootstrapContext createBootstrapContext() {
 		DefaultBootstrapContext bootstrapContext = new DefaultBootstrapContext();
+		// 循环调用BootstrapRegistryInitializer的initialize方法
 		this.bootstrapRegistryInitializers.forEach((initializer) -> initializer.initialize(bootstrapContext));
 		return bootstrapContext;
 	}
@@ -366,41 +400,67 @@ public class SpringApplication {
 		return environmentType;
 	}
 
+	/**
+	 * 准备应用程序上下文环境。
+	 * 该方法配置了应用上下文、环境变量、启动监听器、应用参数和启动横幅等核心组件，为Spring应用程序的启动做准备。
+	 *
+	 * @param bootstrapContext 启动引导上下文，包含应用启动的初始配置和环境。{@link DefaultBootstrapContext}
+	 * @param context 应用的可配置ApplicationContext，用于加载和管理Bean。{@link AnnotationConfigServletWebServerApplicationContext}
+	 * @param environment 应用的环境变量，包含属性和配置信息。{@link ApplicationServletEnvironment}
+	 * @param listeners 启动过程的监听器，用于监听上下文的准备和加载事件。{@link SpringApplicationRunListeners}
+	 * @param applicationArguments 应用启动时的命令行参数。{@link DefaultApplicationArguments}
+	 * @param printedBanner 启动时显示的横幅信息。{@link PrintedBanner}
+	 */
 	private void prepareContext(DefaultBootstrapContext bootstrapContext, ConfigurableApplicationContext context,
 			ConfigurableEnvironment environment, SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments, Banner printedBanner) {
+		// 设置环境变量到应用上下文
 		context.setEnvironment(environment);
+		// 后处理应用上下文
 		postProcessApplicationContext(context);
+		// 应用初始化器
 		applyInitializers(context);
+		// 通知监听器上下文已准备
 		listeners.contextPrepared(context);
+		// 关闭启动引导上下文，并传递应用上下文
 		bootstrapContext.close(context);
+		// 如果启用了启动日志信息，则打印相关日志
 		if (this.logStartupInfo) {
 			logStartupInfo(context.getParent() == null);
 			logStartupProfileInfo(context);
 		}
 		// Add boot specific singleton beans
+		// 注册Spring应用特定的单例Bean
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
+		// 如果有打印过的横幅，则注册为单例Bean
 		if (printedBanner != null) {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
 		}
+		// 配置Bean工厂的属性，如允许循环引用和Bean定义覆盖
 		if (beanFactory instanceof AbstractAutowireCapableBeanFactory) {
 			((AbstractAutowireCapableBeanFactory) beanFactory).setAllowCircularReferences(this.allowCircularReferences);
 			if (beanFactory instanceof DefaultListableBeanFactory) {
 				((DefaultListableBeanFactory) beanFactory)
-					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
+						.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 			}
 		}
+		// 如果启用了延迟初始化，则添加延迟初始化处理器
 		if (this.lazyInitialization) {
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
+		// 添加属性源排序处理器
 		context.addBeanFactoryPostProcessor(new PropertySourceOrderingBeanFactoryPostProcessor(context));
 		// Load the sources
+		// 加载应用源
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+		// 加载并初始化Bean
 		load(context, sources.toArray(new Object[0]));
+		// 通知监听器上下文已加载
 		listeners.contextLoaded(context);
 	}
+
 
 	private void refreshContext(ConfigurableApplicationContext context) {
 		if (this.registerShutdownHook) {
@@ -1244,6 +1304,8 @@ public class SpringApplication {
 	 * Returns read-only ordered Set of the {@link ApplicationListener}s that will be
 	 * applied to the SpringApplication and registered with the {@link ApplicationContext}
 	 * .
+	 * <p>获取只读有序的{@link ApplicationListener}集合，这些监听器将被应用到SpringApplication，
+	 * 并注册到{@link ApplicationContext}中。
 	 * @return the listeners
 	 */
 	public Set<ApplicationListener<?>> getListeners() {

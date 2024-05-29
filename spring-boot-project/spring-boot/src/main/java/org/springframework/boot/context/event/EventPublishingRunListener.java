@@ -75,6 +75,7 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 
 	@Override
 	public void starting(ConfigurableBootstrapContext bootstrapContext) {
+		// 广播ApplicationStartingEvent事件
 		this.initialMulticaster
 			.multicastEvent(new ApplicationStartingEvent(bootstrapContext, this.application, this.args));
 	}
