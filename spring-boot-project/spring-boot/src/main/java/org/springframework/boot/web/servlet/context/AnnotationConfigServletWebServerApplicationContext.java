@@ -45,9 +45,18 @@ import org.springframework.util.ClassUtils;
  * classes one by one (specifying class names as config location) as well as for classpath
  * scanning (specifying base packages as config location).
  * <p>
+ * 接受注解类作为输入的{@link ServletWebServerApplicationContext}，特别是使用了
+ * {@link org.springframework.context.annotation.Configuration @Configuration}注解的类，但也支持普通的
+ * {@link Component @Component}注解类和使用JSR-330规范中{@code javax.inject}注解的类。该类允许逐个注册类
+ * （通过指定类名作为配置位置）以及进行类路径扫描（通过指定基础包作为配置位置）。
+ *
+ * <p>
  * Note: In case of multiple {@code @Configuration} classes, later {@code @Bean}
  * definitions will override ones defined in earlier loaded files. This can be leveraged
  * to deliberately override certain bean definitions through an extra Configuration class.
+ * <p>
+ * 注意：如果有多个{@code @Configuration}注解的类，后面定义的{@code @Bean}将会覆盖前面加载文件中定义的。
+ * 这可以通过额外的Configuration类来故意覆盖某些bean定义来利用。
  *
  * @author Phillip Webb
  * @since 1.0.0
@@ -119,6 +128,10 @@ public class AnnotationConfigServletWebServerApplicationContext extends ServletW
 	 * <p>
 	 * Delegates given environment to underlying {@link AnnotatedBeanDefinitionReader} and
 	 * {@link ClassPathBeanDefinitionScanner} members.
+	 * <p>
+	 * 代理给定的环境到底层的 {@link AnnotatedBeanDefinitionReader} 和
+	 * {@link ClassPathBeanDefinitionScanner} 成员。
+	 * @param environment the environment -- {@link ApplicationServletEnvironment}
 	 */
 	@Override
 	public void setEnvironment(ConfigurableEnvironment environment) {

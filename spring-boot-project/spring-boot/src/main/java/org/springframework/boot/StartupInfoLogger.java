@@ -43,7 +43,7 @@ class StartupInfoLogger {
 	private static final Log logger = LogFactory.getLog(StartupInfoLogger.class);
 
 	private static final long HOST_NAME_RESOLVE_THRESHOLD = 200;
-
+	// main class
 	private final Class<?> sourceClass;
 
 	StartupInfoLogger(Class<?> sourceClass) {

@@ -207,7 +207,7 @@ public class SpringApplication {
 	private boolean headless = true;
 
 	private boolean registerShutdownHook = true;
-
+	// 方法applyInitializers()会依次调用initializers的initialize()方法
 	private List<ApplicationContextInitializer<?>> initializers;
 
 	private List<ApplicationListener<?>> listeners;
@@ -352,6 +352,7 @@ public class SpringApplication {
 			throw new IllegalStateException(ex);
 		}
 		try {
+			// 发布事件
 			Duration timeTakenToReady = Duration.ofNanos(System.nanoTime() - startTime);
 			listeners.ready(context, timeTakenToReady);
 		}
@@ -403,6 +404,9 @@ public class SpringApplication {
 	/**
 	 * 准备应用程序上下文环境。
 	 * 该方法配置了应用上下文、环境变量、启动监听器、应用参数和启动横幅等核心组件，为Spring应用程序的启动做准备。
+	 * <p>
+	 * 1. 配置上下文环境
+	 * 2. 应用初始化器
 	 *
 	 * @param bootstrapContext 启动引导上下文，包含应用启动的初始配置和环境。{@link DefaultBootstrapContext}
 	 * @param context 应用的可配置ApplicationContext，用于加载和管理Bean。{@link AnnotationConfigServletWebServerApplicationContext}
@@ -420,7 +424,7 @@ public class SpringApplication {
 		postProcessApplicationContext(context);
 		// 应用初始化器
 		applyInitializers(context);
-		// 通知监听器上下文已准备
+		// 通知监听器上下文已准备，发射ApplicationContextInitializedEvent事件
 		listeners.contextPrepared(context);
 		// 关闭启动引导上下文，并传递应用上下文
 		bootstrapContext.close(context);
@@ -455,9 +459,9 @@ public class SpringApplication {
 		// 加载应用源
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
-		// 加载并初始化Bean
+		// 加载并初始化Bean定义，将sources注册为bean定义
 		load(context, sources.toArray(new Object[0]));
-		// 通知监听器上下文已加载
+		// 通知监听器上下文已加载，发射ApplicationPreparedEvent事件
 		listeners.contextLoaded(context);
 	}
 
@@ -630,13 +634,18 @@ public class SpringApplication {
 	/**
 	 * Apply any relevant post-processing to the {@link ApplicationContext}. Subclasses
 	 * can apply additional processing as required.
+	 * <p>
+	 * 对{@link ApplicationContext}应用任何相关的后处理。子类可以根据需要进行额外的处理。
 	 * @param context the application context
+	 * -- {@link ApplicationServletEnvironment}
 	 */
 	protected void postProcessApplicationContext(ConfigurableApplicationContext context) {
+		// 如果设置了bean名称生成器，则将其注册为单例
 		if (this.beanNameGenerator != null) {
 			context.getBeanFactory()
-				.registerSingleton(AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR, this.beanNameGenerator);
+					.registerSingleton(AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR, this.beanNameGenerator);
 		}
+		// 如果设置了资源加载器，则将其应用到上下文中
 		if (this.resourceLoader != null) {
 			if (context instanceof GenericApplicationContext) {
 				((GenericApplicationContext) context).setResourceLoader(this.resourceLoader);
@@ -645,6 +654,7 @@ public class SpringApplication {
 				((DefaultResourceLoader) context).setClassLoader(this.resourceLoader.getClassLoader());
 			}
 		}
+		// 如果启用了转换服务，则将其设置到应用上下文的bean工厂中
 		if (this.addConversionService) {
 			context.getBeanFactory().setConversionService(context.getEnvironment().getConversionService());
 		}
@@ -653,23 +663,32 @@ public class SpringApplication {
 	/**
 	 * Apply any {@link ApplicationContextInitializer}s to the context before it is
 	 * refreshed.
+	 * <p>
+	 * 在上下文刷新前，应用所有{@link ApplicationContextInitializer}。
 	 * @param context the configured ApplicationContext (not refreshed yet)
+	 * 配置好的ApplicationContext（还未刷新）
 	 * @see ConfigurableApplicationContext#refresh()
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void applyInitializers(ConfigurableApplicationContext context) {
+		// 遍历并应用所有的ApplicationContextInitializer
 		for (ApplicationContextInitializer initializer : getInitializers()) {
+			// 获取初始化器的泛型参数类型
 			Class<?> requiredType = GenericTypeResolver.resolveTypeArgument(initializer.getClass(),
 					ApplicationContextInitializer.class);
+			// 断言上下文实例是否为初始化器所需的类型
 			Assert.isInstanceOf(requiredType, context, "Unable to call initializer.");
+			// 调用初始化器的initialize方法
 			initializer.initialize(context);
 		}
 	}
+
 
 	/**
 	 * Called to log startup information, subclasses may override to add additional
 	 * logging.
 	 * @param isRoot true if this application is the root of a context hierarchy
+	 * 表示当前应用是否是上下文层次结构的根应用。
 	 */
 	protected void logStartupInfo(boolean isRoot) {
 		if (isRoot) {
@@ -717,8 +736,9 @@ public class SpringApplication {
 
 	/**
 	 * Load beans into the application context.
-	 * @param context the context to load beans into
+	 * @param context the context to load beans into -- {@link AnnotationConfigServletWebServerApplicationContext}
 	 * @param sources the sources to load
+	 * 包含main class在内
 	 */
 	protected void load(ApplicationContext context, Object[] sources) {
 		if (logger.isDebugEnabled()) {
@@ -777,7 +797,7 @@ public class SpringApplication {
 	/**
 	 * Factory method used to create the {@link BeanDefinitionLoader}.
 	 * @param registry the bean definition registry
-	 * @param sources the sources to load
+	 * @param sources the sources to load 包含main class在内
 	 * @return the {@link BeanDefinitionLoader} that will be used to load beans
 	 */
 	protected BeanDefinitionLoader createBeanDefinitionLoader(BeanDefinitionRegistry registry, Object[] sources) {
@@ -801,6 +821,7 @@ public class SpringApplication {
 	}
 
 	private void callRunners(ApplicationContext context, ApplicationArguments args) {
+		// 从spring容器中获取ApplicationRunner和CommandLineRunner的bean, 依次调用它们的run方法
 		context.getBeanProvider(Runner.class).orderedStream().forEach((runner) -> {
 			if (runner instanceof ApplicationRunner) {
 				callRunner((ApplicationRunner) runner, args);
@@ -1198,18 +1219,26 @@ public class SpringApplication {
 	 * ApplicationContext when {@link #run(String...)} is called. This method combines any
 	 * primary sources specified in the constructor with any additional ones that have
 	 * been {@link #setSources(Set) explicitly set}.
+	 * <p>
+	 * 获取所有将被添加到ApplicationContext中的源的不可变集合。这个方法将构造函数中指定的任何主要源与通过
+	 * {@link #setSources(Set)} 明确设置的任何附加源组合起来。
 	 * @return an immutable set of all sources
 	 */
 	public Set<Object> getAllSources() {
+		// 创建一个链表集合并初始化
 		Set<Object> allSources = new LinkedHashSet<>();
+		// 如果主要源非空，添加到allSources中
 		if (!CollectionUtils.isEmpty(this.primarySources)) {
 			allSources.addAll(this.primarySources);
 		}
+		// 如果额外源非空，添加到allSources中
 		if (!CollectionUtils.isEmpty(this.sources)) {
 			allSources.addAll(this.sources);
 		}
+		// 返回不可修改的源集合
 		return Collections.unmodifiableSet(allSources);
 	}
+
 
 	/**
 	 * Sets the {@link ResourceLoader} that should be used when loading resources.

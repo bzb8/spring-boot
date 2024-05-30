@@ -53,6 +53,9 @@ import org.springframework.util.StringUtils;
  * simple facade over {@link AnnotatedBeanDefinitionReader},
  * {@link XmlBeanDefinitionReader} and {@link ClassPathBeanDefinitionScanner}. See
  * {@link SpringApplication} for the types of sources that are supported.
+ * 从底层源加载bean定义，包括XML和JavaConfig。作为{@link AnnotatedBeanDefinitionReader},
+ * {@link XmlBeanDefinitionReader} 和 {@link ClassPathBeanDefinitionScanner} 的简单门面。
+ * 支持的源类型请参见{@link SpringApplication}。
  *
  * @author Phillip Webb
  * @author Vladislav Kisel
@@ -65,7 +68,7 @@ class BeanDefinitionLoader {
 	private static final boolean XML_ENABLED = !SpringProperties.getFlag("spring.xml.ignore");
 
 	private static final Pattern GROOVY_CLOSURE_PATTERN = Pattern.compile(".*\\$_.*closure.*");
-
+	// 包含main class在内
 	private final Object[] sources;
 
 	private final AnnotatedBeanDefinitionReader annotatedReader;
@@ -82,7 +85,7 @@ class BeanDefinitionLoader {
 	 * Create a new {@link BeanDefinitionLoader} that will load beans into the specified
 	 * {@link BeanDefinitionRegistry}.
 	 * @param registry the bean definition registry that will contain the loaded beans
-	 * @param sources the bean sources
+	 * @param sources the bean sources 包含main class在内
 	 */
 	BeanDefinitionLoader(BeanDefinitionRegistry registry, Object... sources) {
 		Assert.notNull(registry, "Registry must not be null");
@@ -312,7 +315,7 @@ class BeanDefinitionLoader {
 	 * not accidentally re-added during scanning.
 	 */
 	private static class ClassExcludeFilter extends AbstractTypeHierarchyTraversingFilter {
-
+		// 包含main class在内
 		private final Set<String> classNames = new HashSet<>();
 
 		ClassExcludeFilter(Object... sources) {
